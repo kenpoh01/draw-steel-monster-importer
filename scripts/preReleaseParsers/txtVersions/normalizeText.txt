@@ -1,0 +1,25 @@
+// scripts/preReleaseParsers/normalizeText.js
+
+export function normalizeText(rawText = "") {
+  return rawText
+    // Replace Latin capital T with hook (Ɵ) → "ti"
+    .replace(/Ɵ/g, "ti")
+    // Replace Latin small t with hook (ƫ) → "t"
+    .replace(/ƫ/g, "tt")
+    // Replace Latin capital T with stroke (Ʃ) → "t"
+    .replace(/Ʃ/g, "t")
+    // Replace Latin small o/macron variants
+    .replace(/Ō/g, "o")
+    // Normalize minus signs (Unicode U+2212) to ASCII "-"
+    .replace(/−/g, "-")
+    // Normalize en dash and em dash
+    .replace(/–/g, "-")
+    .replace(/—/g, "-")
+    // Replace common ligatures
+    .replace(/ﬁ/g, "fi")
+    .replace(/ﬂ/g, "fl")
+    // Collapse multiple spaces
+    .replace(/\s+/g, " ")
+    // Trim leading/trailing whitespace
+    .trim();
+}

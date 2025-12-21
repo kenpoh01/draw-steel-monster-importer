@@ -1,0 +1,80 @@
+/* Import Monster Button in Actor Directory */
+.import-monster-button {
+  font-size: 14px;
+  padding: 6px 10px;
+  margin: 5px 0;
+  width: 100%;
+  background-color: #3c3f41;
+  color: #ffffff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.import-monster-button:hover {
+  background-color: #4a90e2;
+  color: #fff;
+}
+
+/* Import Dialog Container */
+#monster-importer {
+  resize: both;
+  overflow: auto;
+  min-width: 600px;
+  min-height: 400px;
+  color:#ddd
+}
+
+/* Import Dialog Form */
+#monster-importer form {
+  padding: 10px;
+}
+
+/* Form Group Layout */
+#monster-importer .form-group {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* File Input Styling */
+#monster-importer input[type="file"] {
+  width: 100%;
+  padding: 5px;
+  font-size: 14px;
+}
+
+/* Dialog Button Styling */
+#monster-importer .dialog-button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  font-weight: bold;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#monster-importer .dialog-button:hover {
+  background-color: #357ab8;
+}
+
+/* Textarea Styling */
+#monster-importer textarea {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  font-family: monospace;
+  box-sizing: border-box;
+}
+
+/* Instruction Text */
+.malice-instruction {
+  margin-bottom: 0.5em;
+  font-size: 0.95em;
+  color: #444;
+}

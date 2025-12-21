@@ -1,0 +1,9 @@
+{
+  "DRAWSTEELIMPORTER.ImportMonster": "Import Monster",
+  "DRAWSTEELIMPORTER.SelectFile": "Select Monster JSON",
+  "DRAWSTEELIMPORTER.ImportButton": "Import",
+  "DRAWSTEELIMPORTER.Notification.NoFile": "No file selected.",
+  "DRAWSTEELIMPORTER.Notification.InvalidJSON": "Invalid JSON format.",
+  "DRAWSTEELIMPORTER.Notification.Imported": "Imported: {name}"
+}
+
