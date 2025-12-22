@@ -130,42 +130,48 @@ export function buildItems(features, abilities, headerObj) {
       highestCharacteristic: headerObj.highestCharacteristic
     });
 
-    const tierEffects = buildEffectGroups(
-      tierInput,
-      a.potencyMap || [
-        "@potency.weak",
-        "@potency.average",
-        "@potency.strong"
-      ],
-      headerObj.highestCharacteristic
-    );
+const hasAnyTier = !!(a.t1 || a.t2 || a.t3);
 
-    // 🔍 LOG 3 — OUTPUT OF buildEffectGroups
-    console.log("TIER EFFECTS OUTPUT:", {
-      name: a.name,
-      tierEffects
-    });
+let tierEffects = {};
+if (hasAnyTier) {
+  tierEffects = buildEffectGroups(
+    tierInput,
+    a.potencyMap || [
+      "@potency.weak",
+      "@potency.average",
+      "@potency.strong"
+    ],
+    headerObj.highestCharacteristic
+  );
+} else {
+  console.log(`🚫 Skipping tier effect build for ${a.name} — no tiers present.`);
+}
 
-    items.push({
-      name: a.name,
-      type: "ability",
-      img: getAbilityIcon(a),
-      system: {
-        ...a.system,
+items.push({
+  name: a.name,
+  type: "ability",
+  img: getAbilityIcon(a),
+  system: {
+    ...a.system,
 
-        effect: effects,
+    effect: effects,
 
-        damageDisplay: a.damageDisplay ?? null,
+    damageDisplay: a.damageDisplay ?? null,
 
-        power: {
+    power: hasAnyTier
+      ? {
           roll: {
             formula: "@chr",
             characteristics: [headerObj.highestCharacteristic]
           },
           effects: tierEffects
         }
-      }
-    });
+      : {
+          roll: null,
+          effects: {}
+        }
+  }
+});
   }
 
   return items;

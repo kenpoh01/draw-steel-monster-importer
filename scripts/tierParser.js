@@ -131,12 +131,28 @@ export function parseTiers(rawAbilityText = "") {
   const buffers = { t1: [], t2: [], t3: [] };
   let currentTier = null;
 
-  for (const line of lines) {
-    if (/^(T1|Tier 1|✦|!)/i.test(line)) { currentTier = "t1"; buffers.t1.push(line); }
-    else if (/^(T2|Tier 2|★|@)/i.test(line)) { currentTier = "t2"; buffers.t2.push(line); }
-    else if (/^(T3|Tier 3|✸|#)/i.test(line)) { currentTier = "t3"; buffers.t3.push(line); }
-    else if (currentTier) { buffers[currentTier].push(line); }
+for (const line of lines) {
+  const trimmed = line.trim();
+
+  if (/^[✦!]/.test(trimmed)) {
+    currentTier = "t1";
+    buffers.t1.push(trimmed);
   }
+  else if (/^[★@]/.test(trimmed)) {
+    currentTier = "t2";
+    buffers.t2.push(trimmed);
+  }
+  else if (/^[✸#]/.test(trimmed)) {
+    currentTier = "t3";
+    buffers.t3.push(trimmed);
+  }
+  else {
+    // Only push continuation lines if we are inside a tier block
+    if (currentTier) {
+      buffers[currentTier].push(trimmed);
+    }
+  }
+}
 
   return {
     t1: buffers.t1.length ? parseTierText(buffers.t1.join(" "), "t1") : null,
