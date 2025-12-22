@@ -25,5 +25,5 @@
   "packs": [],
  
   "url": "https://github.com/kenpoh01/draw-steel-monster-importer",
-  "manifest": "https://raw.githubusercontent.com/kenpoh01/draw-steel-monster-importer/refs/heads/main/draw-steel-monster-importer/module.json",
+  "manifest": "https://raw.githubusercontent.com/kenpoh01/draw-steel-monster-importer/refs/heads/main/module.json",
   "download": "https://github.com/kenpoh01/draw-steel-monster-importer/releases/download/v.0.0.2/module.zip"
