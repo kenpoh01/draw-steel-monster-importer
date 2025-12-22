@@ -1,6 +1,5 @@
-// scripts/officialParsers/textAdapter/featureParser.js
-
 import { formatFeatureNarrative } from "./featureNarrativeFormatter.js";
+import { enrichNarrative } from "../../narrativeUtils.js";
 
 export function parseFeatureBlock(lines) {
   if (!Array.isArray(lines) || !lines.length) return null;
@@ -24,7 +23,11 @@ export function parseFeatureBlock(lines) {
   }
 
   const descriptionHtml = formatFeatureNarrative(descriptionLines);
-console.log("🧾 [FEATURE PARSED] Description HTML:", descriptionHtml);
+  console.log("🧾 [FEATURE PARSED] Description HTML:", descriptionHtml);
+
+  // ⭐ NEW: Enrich the narrative so m<3] and similar markers transform
+  const enrichedDescriptionHtml = enrichNarrative(descriptionHtml);
+
   return {
     name,
     type: "feature",
@@ -32,7 +35,7 @@ console.log("🧾 [FEATURE PARSED] Description HTML:", descriptionHtml);
 
     system: {
       description: {
-        value: descriptionHtml,
+        value: enrichedDescriptionHtml,   // ⭐ use enriched version
         director: ""
       },
       effect: { before, after },

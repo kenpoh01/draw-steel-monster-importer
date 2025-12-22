@@ -169,6 +169,32 @@ if (maliceMatch) {
 
   effectBefore = effectBefore.trim();
   effectAfter = effectAfter.trim();
+  
+  // ---------------------------------------------
+// IMPLICIT EFFECT BLOCK (after tiers, before "*")
+// ---------------------------------------------
+if (!effectBefore && !effectAfter && tierStartIndex !== -1) {
+  let implicit = "";
+
+  const afterTierIndex = tierStartIndex + tierLines.length;
+
+  for (let i = afterTierIndex; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    if (line === "*") break;
+    if (!line.length) continue;
+    if (/^effect:/i.test(line)) continue;
+
+    implicit += line + "\n";
+  }
+
+  effectAfter = implicit.trim();
+}
+
+
+// Enrich both explicit and implicit effect text
+effectBefore = enrichNarrative(effectBefore);
+effectAfter = enrichNarrative(effectAfter);
 
   // -------------------------
   // BUILD ABILITY OBJECT
