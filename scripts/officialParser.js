@@ -7,11 +7,9 @@
 
 export async function parseOfficialMonster({ headerObj, features, abilities }) {
   if (!headerObj) {
-    console.warn("parseOfficialMonster: No headerObj provided.");
     return null;
   }
 
-  console.log("🛠 Building actor from headerObj:", headerObj);
 
   // ---------------------------------------------
   // 1. BASIC ACTOR DATA
@@ -95,7 +93,6 @@ export async function parseOfficialMonster({ headerObj, features, abilities }) {
     }
   };
 
-  console.log("✅ Actor core built:", actorData);
   return actorData;
 }
 

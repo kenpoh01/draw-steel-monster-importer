@@ -47,7 +47,6 @@ export function parseAbilitiesAndFeatures(rawText, headerObj) {
     .filter(Boolean);
 
   if (!lines.length) {
-    console.warn("❌ Empty block");
     return { abilities: [], features: [] };
   }
 

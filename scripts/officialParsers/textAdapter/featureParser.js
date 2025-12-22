@@ -11,7 +11,6 @@ export function parseFeatureBlock(lines) {
   let after = "";
   const descriptionLines = [];
 
-  // Extract effect.before, effect.after, and description lines
   for (const line of lines.slice(1)) {
     if (line.startsWith("Effect:")) {
       before = line.replace("Effect:", "").trim();
@@ -24,9 +23,8 @@ export function parseFeatureBlock(lines) {
     descriptionLines.push(line);
   }
 
-  // Format the narrative using the dedicated feature formatter
   const descriptionHtml = formatFeatureNarrative(descriptionLines);
-
+console.log("🧾 [FEATURE PARSED] Description HTML:", descriptionHtml);
   return {
     name,
     type: "feature",
@@ -37,7 +35,6 @@ export function parseFeatureBlock(lines) {
         value: descriptionHtml,
         director: ""
       },
-
       effect: { before, after },
       spend: { text: "", value: null },
       source: { book: "", page: "", license: "" },

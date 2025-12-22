@@ -14,6 +14,7 @@ function extractAbilityName(header) {
     .replace(/Triggered action/i, "")   // remove triggered tag
     .replace(/Villain Action.*/i, "")   // remove villain tag
     .replace(/Maneuver/i, "")           // remove maneuver tag
+    .replace(/\d+\s+malice$/i, "")      // remove trailing malice cost
     .trim();
 }
 
@@ -62,6 +63,16 @@ export function parseAbilityBlock(lines, headerObj) {
   // Extract name
   const name = extractAbilityName(header);
   console.log("📛 Ability name:", name);
+
+// ---------------------------------------------
+// MALICE COST IN HEADER (e.g. "3 Malice")
+// ---------------------------------------------
+let maliceCost = null;
+const maliceMatch = header.match(/(\d+)\s+malice$/i);
+if (maliceMatch) {
+  maliceCost = parseInt(maliceMatch[1]);
+  console.log("🔥 Malice cost detected:", maliceCost);
+}
 
   // Extract category
   const category = extractAbilityCategory(lines);
@@ -193,7 +204,7 @@ export function parseAbilityBlock(lines, headerObj) {
       spend: { text: "", value: null },
       source: { book: "", page: "", license: "" },
       story: "",
-      resource: null,
+      resource: maliceCost,
       trigger: "",
       _dsid: name.toLowerCase().replace(/\s+/g, "-")
     },

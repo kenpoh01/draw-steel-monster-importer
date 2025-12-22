@@ -1,51 +1,78 @@
 /**
- * Clean, deterministic formatter for Draw Steel feature descriptions.
- * - Preserves the header (first non-empty line)
- * - Merges wrapped lines into a single paragraph
- * - Strips asterisks
- * - Inserts paragraph breaks before labels like "Solo Turns:"
- * - Never skips lines
- * - Never uses narrative heuristics
+ * Deterministic formatter for Draw Steel feature descriptions.
+ * Assumptions based on current pipeline:
+ *  - Feature title has ALREADY been stripped before this function.
+ *  - This function only sees the descriptive lines.
+ *  - A feature is either:
+ *      * Unlabelled: no "X:" style labels → single paragraph.
+ *      * Labelled: one or more label lines starting with "X:" → one paragraph per label.
+ *  - Labels appear at the start of a line, e.g. "End Effect: ..." or "Solo Turns: ...".
  */
+
 export function formatFeatureNarrative(lines) {
+  console.log("🟦 [FEATURE FORMAT] Incoming lines:", JSON.stringify(lines, null, 2));
+
   if (!Array.isArray(lines) || !lines.length) return "";
 
-  // Strip asterisks and trim lines
+  // Strip asterisks and trim
   const cleaned = lines
-    .map(l => l.replace(/^\*+|\*+$/g, "").trim())
+    .map(l => (l ?? "").replace(/^\*+|\*+$/g, "").trim())
     .filter(l => l.length > 0);
+
+  console.log("🟩 [FEATURE FORMAT] Cleaned lines:", JSON.stringify(cleaned, null, 2));
 
   if (!cleaned.length) return "";
 
-  // First line is always the header
-  const header = cleaned[0];
+  // Merge wrapped lines
+  let body = cleaned.join(" ").trim();
+  console.log("🟧 [FEATURE FORMAT] Merged body:", JSON.stringify(body));
 
-  // Remaining lines form the body
-  const bodyLines = cleaned.slice(1);
-
-  // Merge wrapped lines into one block
-  let body = bodyLines.join(" ").trim();
-
-  // Normalize NBSP + weird periods
+  // Normalize Unicode punctuation
   body = body
     .replace(/\u00A0/g, " ")
-    .replace(/[\u2024\u2025\u2026\uFE52\uFF0E]/g, ".");
+    .replace(/[\u2024\u2025\u2026\uFE52\uFF0E\uFF61\u3002\u2027]/g, ".")
+    .replace(/\.{2,}/g, ".");
 
-  // Insert a paragraph break before labels like "Solo Turns:"
-  body = body.replace(
-    /\. *([A-Z][^:]{0,50}):/g,
-    ".\n\n$1:"
+  console.log("🟪 [FEATURE FORMAT] After punctuation normalization:", JSON.stringify(body));
+
+// Find all labels of the form "X:" where X starts with capital,
+// contains no ":" or "." (so it can't swallow whole sentences)
+const labelRegex = /([A-Z][^:.\n]{0,50}:)/g;
+const labels = [];
+let match;
+
+while ((match = labelRegex.exec(body)) !== null) {
+  labels.push({ label: match[1], index: match.index });
+}
+
+console.log("🟫 [FEATURE FORMAT] Detected labels:", labels);
+
+if (labels.length === 0) {
+  console.log("🟫 [FEATURE FORMAT] Unlabelled feature → single paragraph.");
+  return `<p>${body}</p>`;
+}
+
+const paragraphs = [];
+
+for (let i = 0; i < labels.length; i++) {
+  const { label, index } = labels[i];
+  const nextIndex = i + 1 < labels.length ? labels[i + 1].index : body.length;
+
+  const labelEnd = index + label.length;
+  const paragraphBody = body.slice(labelEnd, nextIndex).trim();
+
+  console.log("🟩 [FEATURE FORMAT] Paragraph slice:", {
+    label,
+    from: labelEnd,
+    to: nextIndex,
+    paragraphBody
+  });
+
+  paragraphs.push(
+    `<p><strong>${label}</strong> ${paragraphBody}</p>`
   );
+}
 
-  // Build final HTML
-  const paragraphs = body
-    .split(/\n{2,}/)
-    .map(p => `<p>${p.trim()}</p>`)
-    .join("\n");
-
-  // Header + first paragraph merged
-  return `<p><strong>${header}.</strong> ${body.split(/\n{2,}/)[0].trim()}</p>` +
-         (body.split(/\n{2,}/).length > 1
-           ? "\n" + paragraphs.split("\n").slice(1).join("\n")
-           : "");
+console.log("🟦 [FEATURE FORMAT] Final paragraphs:", paragraphs);
+return paragraphs.join("\n");
 }
