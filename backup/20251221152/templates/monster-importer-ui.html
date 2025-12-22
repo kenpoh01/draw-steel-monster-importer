@@ -1,0 +1,37 @@
+<div class="window-content">
+  <form class="monster-importer flexcol">
+    <h2>Import Draw Steel Monster</h2>
+    <p>Paste the raw monster text below or select a JSON file. Choose the source type and destination folder.</p>
+
+    <!-- Source type toggle -->
+    <div class="form-group">
+      <label for="text-type">Text Source</label>
+      <select id="text-type" name="text-type">
+        <option value="official">Official PDF</option>
+        <option value="pre">Pre-release PDF</option>       
+	  </select>
+    </div>
+
+    <!-- Folder -->
+    <div class="form-group">
+      <label for="monster-folder">Folder Name</label>
+      <input type="text" id="monster-folder" name="monster-folder" placeholder="Optional: Create or use folder" />
+    </div>
+
+    <!-- Raw text input -->
+    <div class="form-group" id="text-block">
+      <label for="monster-text">Raw Text</label>
+      <textarea id="monster-text" rows="12" placeholder="Paste monster block here..."></textarea>
+    </div>
+
+    <!-- JSON file input -->
+    <div class="form-group" id="file-block" style="display:none;">
+      <label for="monster-file">Import from JSON file</label>
+      <input type="file" id="monster-file" accept=".json" multiple />
+    </div>
+
+    <button type="button" class="import-button" id="import-button">
+      <i class="fas fa-plus"></i> Import Monster
+    </button>
+  </form>
+</div>

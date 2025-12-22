@@ -173,8 +173,7 @@ export function parseAbilityBlock(lines, headerObj) {
       keywords,
       distance,
       target,
-      damageDisplay: distance?.type || "melee",
-
+      damageDisplay: null,
       highestCharacteristic: highest,
 
       power: {

@@ -1,107 +1,146 @@
+// scripts/builders/effectGroups.js
 import { supportedConditions } from "../keywordParser.js";
 
-/**
- * Build effect groups for a tiered ability.
- * Handles damage, condition, movement, and narrative effects.
- *
- * @param {Object} tieredDamage - { t1, t2, t3 } from official parser
- *   Each tier is shaped like:
- *   {
- *     damage: {
- *       value: number | string,
- *       types: string[],
- *       properties: string[],
- *       potency: { value: string, characteristic: string }
- *     },
- *     movement: { name: string, distance: number } | null,
- *     conditions: Array<any>
- *   }
- * @param {Array} potencyMap - potency values for tiers (fallback)
- * @param {String} highestCharacteristic - fallback characteristic
- * @returns {Object} effectGroups keyed by group id
- */
 export function buildEffectGroups(tieredDamage, potencyMap, highestCharacteristic) {
-  const id = foundry.utils.randomID();
+  const effectGroups = {};
 
-  const effectGroups = {
-    [id]: {
-      _id: id,
-      type: "damage",
-      name: "",
-      img: null,
-      damage: {},
-      applied: {},
-      forced: {},
-      other: {}
-    }
+  // -------------------------
+  // DAMAGE GROUP
+  // -------------------------
+  const dmgId = foundry.utils.randomID();
+  effectGroups[dmgId] = {
+    _id: dmgId,
+    type: "damage",
+    name: "",
+    img: null,
+    damage: {},
+    applied: {},
+    forced: {},
+    other: {}
   };
 
-  const group = effectGroups[id];
+  const dmgGroup = effectGroups[dmgId];
 
   [tieredDamage.t1, tieredDamage.t2, tieredDamage.t3].forEach((parsed, i) => {
     if (!parsed) return;
-
     const tier = `tier${i + 1}`;
-
-    /* -------------------------
-     * DAMAGE
-     * ----------------------- */
     const dmg = parsed.damage;
-    if (dmg && (dmg.value !== undefined && dmg.value !== null)) {
-      const valueStr = typeof dmg.value === "number" ? dmg.value.toString() : String(dmg.value);
 
-      // Prefer official potency if present, else use potencyMap + highestCharacteristic
-      const potency = dmg.potency || {
-        value: potencyMap?.[i],
-        characteristic: highestCharacteristic || "none"
-      };
-
-      group.damage[tier] = {
-        value: valueStr,
-        types: Array.isArray(dmg.types) ? dmg.types : [],
-        properties: Array.isArray(dmg.properties) ? dmg.properties : [],
-        potency
-      };
-    }
-
-    /* -------------------------
-     * CONDITIONS
-     * ----------------------- */
-    if (Array.isArray(parsed.conditions) && parsed.conditions.length > 0) {
-      // For now, just build a generic applied block based on presence of conditions.
-      // If your official parser has richer condition objects, we can wire them in next.
-      group.applied[tier] = {
-        display: "{{potency}} " + parsed.conditions.map(String).join(", "),
-        potency: {
+    if (dmg) {
+      dmgGroup.damage[tier] = {
+        value: String(dmg.value),
+        types: dmg.types || [],
+        properties: dmg.properties || [],
+        potency: dmg.potency || {
           value: potencyMap?.[i],
-          characteristic: parsed.damage?.potency?.characteristic || "none"
-        },
-        effects: {} // can be enriched with specific condition metadata if available
-      };
-    }
-
-    /* -------------------------
-     * MOVEMENT
-     * ----------------------- */
-    if (parsed.movement && parsed.movement.name && typeof parsed.movement.distance === "number") {
-      group.forced[tier] = {
-        movement: [parsed.movement.name],
-        distance: parsed.movement.distance.toString(),
-        display: "{{forced}}",
-        properties: [],
-        potency: {
-          value: potencyMap?.[i],
-          characteristic: parsed.damage?.potency?.characteristic || "none"
+          characteristic: highestCharacteristic
         }
       };
     }
-
-    /* -------------------------
-     * NARRATIVE
-     * ----------------------- */
-    // If your official parser carries narrative text somewhere (e.g. parsed.narrative),
-    // we can hook it here. For now, we leave `other` empty.
   });
 
+  // -------------------------
+  // APPLIED GROUPS (one per condition)
+  // -------------------------
+  const tiers = [tieredDamage.t1, tieredDamage.t2, tieredDamage.t3];
+  const conditionNames = new Set();
+
+  tiers.forEach(t => {
+    if (!t) return;
+    for (const c of t.conditions || []) {
+      conditionNames.add(c.name);
+    }
+  });
+
+  for (const condName of conditionNames) {
+    const id = foundry.utils.randomID();
+
+    const group = {
+      _id: id,
+      type: "applied",
+      name: condName[0].toUpperCase() + condName.slice(1),
+      img: null,
+      applied: {},
+      damage: {},
+      forced: {},
+      other: {}
+    };
+
+    tiers.forEach((parsed, i) => {
+      if (!parsed) return;
+      const tier = `tier${i + 1}`;
+      const cond = (parsed.conditions || []).find(c => c.name === condName);
+      if (!cond) return;
+
+      // Find the raw clause that contains this condition
+      const rawClause = (parsed.rawClauses || []).find(c =>
+        c.includes(condName)
+      );
+
+      // Replace characteristic trigger with {{potency}}
+      let display = rawClause || `{{potency}} ${condName}`;
+      display = display.replace(/([maria])<\d+\]/gi, "{{potency}}");
+
+      group.applied[tier] = {
+        display,
+        potency: {
+          value: cond.potency,
+          characteristic: cond.characteristic || "none"
+        },
+        effects: {
+          [condName]: {
+            condition: "failure",
+            end: cond.end || "",
+            properties: []
+          }
+        }
+      };
+    });
+
+    effectGroups[id] = group;
+  }
+
+  // -------------------------
+  // OTHER GROUP (pure narrative)
+  // -------------------------
+  const hasPureNarrative = tiers.some(t => t && t.narrative && !t.conditions.length);
+
+  if (hasPureNarrative) {
+    const id = foundry.utils.randomID();
+    const group = {
+      _id: id,
+      type: "other",
+      name: "",
+      img: null,
+      applied: {},
+      damage: {},
+      forced: {},
+      other: {}
+    };
+
+    tiers.forEach((parsed, i) => {
+      if (!parsed || !parsed.narrative) return;
+      if (parsed.conditions.length) return;
+
+      const tier = `tier${i + 1}`;
+      group.other[tier] = {
+        display: parsed.narrative
+      };
+    });
+
+    effectGroups[id] = group;
+  }
+
   return effectGroups;
+}
+
+function buildConditionDisplay(name, tierIndex, characteristic) {
+  // You can tune wording later; keep it simple + schema‑compatible for now.
+  if (name === "bleeding") {
+    return "if one target has {{potency}} they are bleeding (save ends)";
+  }
+  if (name === "grabbed") {
+    return "if the other target {{potency}} they are grabbed";
+  }
+  return `{{potency}} ${name}`;
 }
