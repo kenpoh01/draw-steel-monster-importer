@@ -35,6 +35,21 @@ export function parseDistanceLine(line = "") {
   let distance = {};
   const target = parseTarget(targetPart);
 
+// -------------------------
+// X <shape> within Y
+// -------------------------
+const withinRegex = /(\d+)\s*(cube|burst|line|cone)\s+within\s+(\d+)/i;
+const withinMatch = distancePart.match(withinRegex);
+if (withinMatch) {
+  distance = {
+    type: withinMatch[2].toLowerCase(),
+    primary: Number(withinMatch[1]),
+    secondary: null,
+    tertiary: Number(withinMatch[3])
+  };
+  return { distance, target };
+}
+
   // --- WALL -----------------------------------------------------------------
   const wallMatch = distancePart.match(/^(\d+)\s+wall\s+within\s+(\d+)$/i);
   if (wallMatch) {

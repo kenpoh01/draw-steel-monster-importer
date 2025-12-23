@@ -1,4 +1,6 @@
 // scripts/headerAdapter.js
+import { validMovementTypes } from "./keywordParser.js";
+import { validOrganizations, validRoles } from "./keywordParser.js"
 
 /**
  * Parse the monster header block into a clean headerObj.
@@ -35,27 +37,45 @@ export function parseHeaderLines(block) {
     immunities: {},
     weaknesses: {},
 
+    // movement
+    movementTypes: [],
+    withCaptain: null,
+
     // source metadata
     sourceBook: "",
     sourcePage: "",
     sourceLicense: ""
   };
 
-  // ---------------------------------------------
-  // 1. NAME + LEVEL + ROLE
-  // Example: "Ashen Hoarder Level 4 Solo"
-  // ---------------------------------------------
-  const nameLine = lines.find(l => /Level\s+\d+/i.test(l));
-  if (nameLine) {
-    const levelMatch = nameLine.match(/Level\s+(\d+)/i);
-    const roleMatch = nameLine.match(/\b(Solo|Elite|Standard|Minion)\b/i);
+ // ---------------------------------------------
+// 1. NAME + LEVEL + ORGANIZATION + ROLE
+// Example: "Angulotl Cleaver Level 1 Minion Ambusher"
+// ---------------------------------------------
+const nameLine = lines.find(l => /Level\s+\d+/i.test(l));
+if (nameLine) {
+  // Extract level
+  const levelMatch = nameLine.match(/Level\s+(\d+)/i);
+  headerObj.level = levelMatch ? Number(levelMatch[1]) : 1;
 
-    headerObj.level = levelMatch ? Number(levelMatch[1]) : 1;
-    headerObj.role = roleMatch ? roleMatch[1].toLowerCase() : "";
+  // Extract organization (solo, elite, standard, minion, horde, platoon, leader)
+  const orgMatch = nameLine
+    .toLowerCase()
+    .split(/\s+/)
+    .find(word => validOrganizations.includes(word));
 
-    // Name is everything before "Level"
-    headerObj.name = nameLine.split(/Level/i)[0].trim();
-  }
+  headerObj.organization = orgMatch || "";
+
+  // Extract role (ambusher, brute, controller, etc.)
+  const roleMatch = nameLine
+    .toLowerCase()
+    .split(/\s+/)
+    .find(word => validRoles.includes(word));
+
+  headerObj.role = roleMatch || "";
+
+  // Name is everything before "Level"
+  headerObj.name = nameLine.split(/Level/i)[0].trim();
+}
 
   // ---------------------------------------------
   // 2. KEYWORDS + EV
@@ -144,6 +164,46 @@ export function parseHeaderLines(block) {
     }
   }
 
-  console.log("📤 Parsed headerObj:", headerObj);
+  // ---------------------------------------------
+  // 6. MOVEMENT TYPES + WITH CAPTAIN
+  // Example:
+  // "Movement: Burrow"
+  // "Movement: Climb, swim"
+  // "Movement: Climb, swim With Captain: +1 damage bonus to strikes"
+  // ---------------------------------------------
+  const movementLine = lines.find(l => /^Movement:/i.test(l));
+  if (movementLine) {
+    let line = movementLine.trim();
+    let withCaptain = null;
+
+    // Extract "With Captain: ..."
+    const captainMatch = line.match(/with captain:\s*(.+)$/i);
+    if (captainMatch) {
+      withCaptain = captainMatch[1].trim();
+      line = line.replace(/with captain:.+$/i, "").trim();
+    }
+
+    // Remove "Movement:" prefix
+    line = line.replace(/^movement:\s*/i, "").trim();
+
+    // Normalize whitespace
+    line = line.replace(/\s+/g, " ").trim();
+
+    // Split into tokens by comma or semicolon
+    const tokens = line.split(/[,;]/).map(t => t.trim()).filter(Boolean);
+
+    const types = [];
+
+    for (const token of tokens) {
+      const type = token.toLowerCase();
+      if (validMovementTypes.includes(type)) {
+        types.push(type);
+      }
+    }
+
+    headerObj.movementTypes = types;
+    headerObj.withCaptain = withCaptain;
+  }
+
   return headerObj;
 }

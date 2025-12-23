@@ -18,7 +18,7 @@ export function parseTierText(text = "", tier = "t1") {
 
   const result = {
     damage: null,
-    movement: null,
+    forced: null,
     conditions: [],
     narrative: "",
     rawClauses: []
@@ -48,18 +48,23 @@ export function parseTierText(text = "", tier = "t1") {
   }
 
   // -------------------------
-  // MOVEMENT
+  // FORCED MOVEMENT
   // -------------------------
   const movement = parseMovement(working);
   if (movement) {
-    result.movement = {
+    result.forced = {
       movement: [movement.name],
-      distance: movement.distance,
-      properties: [],
-      potency: { value: potencyMap[tier], characteristic: "none" }
+      distance: String(movement.distance),
+      properties: movement.direction !== "none" ? [movement.direction] : [],
+      potency: { value: potencyMap[tier], characteristic: "none" },
+      display: "{{forced}}"
     };
 
-    working = working.replace(/\b(slide|pull|push|shift)\s+\d+\b/i, "").trim();
+    working = working
+      .replace(/\b(vertical|horizontal)?\s*(push|pull|slide|shift)\s+\d+\b/i, "")
+      .trim();
+
+    working = working.replace(/^,/, "").trim();
   }
 
   // -------------------------
@@ -72,7 +77,6 @@ export function parseTierText(text = "", tier = "t1") {
 
     const saveEnds = /\(save ends\)/i.test(clause);
 
-    // Characteristic trigger: m<2], a<3], etc.
     const charMatch = clause.match(/([maria])<\d+\]/i);
     let characteristic = "none";
     if (charMatch) {
@@ -86,7 +90,6 @@ export function parseTierText(text = "", tier = "t1") {
       }[key] || "none";
     }
 
-    // Condition patterns
     let condMatch =
       clause.match(/\bthey\s+are\s+([a-z ]+?)(?:\s*\(save ends\))?$/i) ||
       clause.match(/\]\s*([a-z ]+?)(?:\s*\(save ends\))?$/i);
@@ -109,7 +112,6 @@ export function parseTierText(text = "", tier = "t1") {
         });
       }
     } else {
-      // Pure narrative
       result.narrative += clause + " ";
     }
   }
@@ -131,28 +133,24 @@ export function parseTiers(rawAbilityText = "") {
   const buffers = { t1: [], t2: [], t3: [] };
   let currentTier = null;
 
-for (const line of lines) {
-  const trimmed = line.trim();
+  for (const line of lines) {
+    const trimmed = line.trim();
 
-  if (/^[✦!]/.test(trimmed)) {
-    currentTier = "t1";
-    buffers.t1.push(trimmed);
-  }
-  else if (/^[★@]/.test(trimmed)) {
-    currentTier = "t2";
-    buffers.t2.push(trimmed);
-  }
-  else if (/^[✸#]/.test(trimmed)) {
-    currentTier = "t3";
-    buffers.t3.push(trimmed);
-  }
-  else {
-    // Only push continuation lines if we are inside a tier block
-    if (currentTier) {
-      buffers[currentTier].push(trimmed);
+    if (/^[✦!]/.test(trimmed)) {
+      currentTier = "t1";
+      buffers.t1.push(trimmed);
+    } else if (/^[★@]/.test(trimmed)) {
+      currentTier = "t2";
+      buffers.t2.push(trimmed);
+    } else if (/^[✸#]/.test(trimmed)) {
+      currentTier = "t3";
+      buffers.t3.push(trimmed);
+    } else {
+      if (currentTier) {
+        buffers[currentTier].push(trimmed);
+      }
     }
   }
-}
 
   return {
     t1: buffers.t1.length ? parseTierText(buffers.t1.join(" "), "t1") : null,
@@ -165,7 +163,8 @@ for (const line of lines) {
  * Parse target text into structured target info.
  */
 export function parseTarget(targetText) {
-  if (!targetText || typeof targetText !== "string") return { type: "special", value: null };
+  if (!targetText || typeof targetText !== "string")
+    return { type: "special", value: null };
 
   const numberWords = {
     one: 1, two: 2, three: 3, four: 4, five: 5,

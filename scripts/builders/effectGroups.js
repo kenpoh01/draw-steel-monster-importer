@@ -72,12 +72,10 @@ export function buildEffectGroups(tieredDamage, potencyMap, highestCharacteristi
       const cond = (parsed.conditions || []).find(c => c.name === condName);
       if (!cond) return;
 
-      // Find the raw clause that contains this condition
       const rawClause = (parsed.rawClauses || []).find(c =>
         c.includes(condName)
       );
 
-      // Replace characteristic trigger with {{potency}}
       let display = rawClause || `{{potency}} ${condName}`;
       display = display.replace(/([maria])<\d+\]/gi, "{{potency}}");
 
@@ -94,6 +92,43 @@ export function buildEffectGroups(tieredDamage, potencyMap, highestCharacteristi
             properties: []
           }
         }
+      };
+    });
+
+    effectGroups[id] = group;
+  }
+
+  // -------------------------
+  // FORCED MOVEMENT GROUP
+  // -------------------------
+  const hasForced = tiers.some(t => t && t.forced);
+
+  if (hasForced) {
+    const id = foundry.utils.randomID();
+
+    const group = {
+      _id: id,
+      type: "forced",
+      name: "Push",
+      img: null,
+      applied: {},
+      damage: {},
+      forced: {},
+      other: {}
+    };
+
+    tiers.forEach((parsed, i) => {
+      if (!parsed || !parsed.forced) return;
+
+      const tier = `tier${i + 1}`;
+      const mv = parsed.forced;
+
+      group.forced[tier] = {
+        display: mv.display,          // "{{forced}}"
+        movement: mv.movement,        // ["push"], ["slide"], etc.
+        distance: mv.distance,        // "2"
+        properties: mv.properties,    // ["vertical"], []
+        potency: mv.potency
       };
     });
 
@@ -132,15 +167,4 @@ export function buildEffectGroups(tieredDamage, potencyMap, highestCharacteristi
   }
 
   return effectGroups;
-}
-
-function buildConditionDisplay(name, tierIndex, characteristic) {
-  // You can tune wording later; keep it simple + schema‑compatible for now.
-  if (name === "bleeding") {
-    return "if one target has {{potency}} they are bleeding (save ends)";
-  }
-  if (name === "grabbed") {
-    return "if the other target {{potency}} they are grabbed";
-  }
-  return `{{potency}} ${name}`;
 }

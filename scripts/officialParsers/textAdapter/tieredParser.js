@@ -3,6 +3,7 @@
 import { enrichNarrative } from "../../narrativeUtils.js";
 import { parseDistanceLine } from "../../distanceParser.js";
 import { parseTarget, parseTiers } from "../../tierParser.js";
+import { injectConditionEnrichersIntoText } from "../../helpers/enricherInjector.js";
 
 /**
  * Extract the ability name from the header line.
@@ -192,9 +193,13 @@ if (!effectBefore && !effectAfter && tierStartIndex !== -1) {
 }
 
 
-// Enrich both explicit and implicit effect text
+// First enrich narrative normally
 effectBefore = enrichNarrative(effectBefore);
 effectAfter = enrichNarrative(effectAfter);
+
+// Then inject clickable condition enrichers (no mechanical effects)
+effectBefore = injectConditionEnrichersIntoText(effectBefore);
+effectAfter = injectConditionEnrichersIntoText(effectAfter);
 
   // -------------------------
   // BUILD ABILITY OBJECT

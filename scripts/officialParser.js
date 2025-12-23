@@ -14,10 +14,17 @@ export async function parseOfficialMonster({ headerObj, features, abilities }) {
   // ---------------------------------------------
   // 1. BASIC ACTOR DATA
   // ---------------------------------------------
-  const actorData = {
-    name: headerObj.name || "Unnamed Monster",
-    type: "npc",
-    img: headerObj.img || "systems/draw-steel/assets/roles/solo.webp",
+// Organization-based image path
+const actorImagePath = `systems/draw-steel/assets/roles/${headerObj.organization}.webp`;
+
+const actorData = {
+  name: headerObj.name || "Unnamed Monster",
+  type: "npc",
+  img: actorImagePath,
+  token: {
+    img: actorImagePath,
+    name: headerObj.name || "Unnamed Monster"
+  },
     system: {
       stamina: {
         value: headerObj.stamina || 1,
