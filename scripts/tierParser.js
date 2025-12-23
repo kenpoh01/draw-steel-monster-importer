@@ -77,7 +77,15 @@ export function parseTierText(text = "", tier = "t1") {
 
     const saveEnds = /\(save ends\)/i.test(clause);
 
-    const charMatch = clause.match(/([maria])<\d+\]/i);
+    // POTENCY (p<1], p<2], etc.)
+    let numericPotency = null;
+    const potencyMatch = clause.match(/p<(\d+)\]/i);
+    if (potencyMatch) {
+      numericPotency = Number(potencyMatch[1]);
+    }
+
+    // CHARACTERISTIC POTENCY (m<1], a<2], r<1], i<3], p<1])
+    const charMatch = clause.match(/([marip])<\d+\]/i);
     let characteristic = "none";
     if (charMatch) {
       const key = charMatch[1].toLowerCase();
@@ -90,6 +98,7 @@ export function parseTierText(text = "", tier = "t1") {
       }[key] || "none";
     }
 
+    // CONDITION TEXT
     let condMatch =
       clause.match(/\bthey\s+are\s+([a-z ]+?)(?:\s*\(save ends\))?$/i) ||
       clause.match(/\]\s*([a-z ]+?)(?:\s*\(save ends\))?$/i);
@@ -101,13 +110,17 @@ export function parseTierText(text = "", tier = "t1") {
         ? parsed.condition
         : [parsed.condition];
 
+      // IMPORTANT: potency stays a simple value, not an object
+      const potencyValue =
+        numericPotency !== null ? numericPotency : potencyMap[tier];
+
       for (const name of names) {
         if (!name) continue;
 
         result.conditions.push({
           name,
           end: saveEnds ? "save" : "",
-          potency: potencyMap[tier],
+          potency: potencyValue,
           characteristic
         });
       }

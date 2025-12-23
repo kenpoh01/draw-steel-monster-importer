@@ -2,6 +2,7 @@
 
 import { parseMonster } from "./monsterParser.js";
 import { buildItems } from "./builders/buildItems.js";
+import { parseMaliceText } from "./officialMaliceParsers/maliceParser.js";
 
 class MonsterImportUI extends Application {
   static get defaultOptions() {
@@ -29,6 +30,7 @@ class MonsterImportUI extends Application {
   async _importMonster() {
     try {
       const rawText = document.querySelector("#monster-text")?.value ?? "";
+      const maliceText = document.querySelector("#malice-text")?.value ?? "";
       const folderName = document.querySelector("#monster-folder")?.value?.trim();
 
       if (!rawText) {
@@ -39,19 +41,31 @@ class MonsterImportUI extends Application {
       // Parse the monster (header, features, abilities, actorData)
       const { actorData, features, abilities } = await parseMonster(rawText);
 
+      // Parse malice abilities ONLY if the malice block is not empty
+      let maliceAbilities = [];
+      if (maliceText.trim().length > 0) {
+        const parsed = parseMaliceText(maliceText);
+        maliceAbilities = parsed.items ?? [];
+      }
+
       // Build Foundry items from parsed data
       const highestCharacteristic = (() => {
-      const chars = actorData.system?.characteristics || {};
-      const entries = Object.entries(chars);
-      if (!entries.length) return "none";
+        const chars = actorData.system?.characteristics || {};
+        const entries = Object.entries(chars);
+        if (!entries.length) return "none";
         entries.sort((a, b) => b[1] - a[1]);
-      return entries[0][0];
-  })();
+        return entries[0][0];
+      })();
 
-const items = buildItems(features, abilities, {
-  ...actorData.system,
-  highestCharacteristic
-});
+      const items = buildItems(features, abilities, {
+        ...actorData.system,
+        highestCharacteristic
+      });
+
+      // Append malice abilities (if any)
+      if (maliceAbilities.length > 0) {
+        items.push(...maliceAbilities);
+      }
 
       // Create folder if needed
       let folderId = null;

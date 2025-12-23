@@ -1,7 +1,7 @@
 <div class="window-content">
   <form class="monster-importer flexcol">
     <h2>Import Draw Steel Monster</h2>
-    <p>Paste the raw monster text below or select a JSON file. Choose the source type and destination folder.</p>
+    <p><p>Paste the raw monster text below. Optionally include malice abilities.</p></p>
 
     <!-- Source type toggle -->
     <div class="form-group">
@@ -21,14 +21,15 @@
     <!-- Raw text input -->
     <div class="form-group" id="text-block">
       <label for="monster-text">Raw Text</label>
-      <textarea id="monster-text" rows="12" placeholder="Paste monster block here..."></textarea>
+      <textarea id="monster-text" rows="12" placeholder="Paste monster block here...Use * on its own line to separate the Monster Header (after the M, A, ...line) and EACH feature and ability. "></textarea>
     </div>
 
-    <!-- JSON file input -->
-    <div class="form-group" id="file-block" style="display:none;">
-      <label for="monster-file">Import from JSON file</label>
-      <input type="file" id="monster-file" accept=".json" multiple />
-    </div>
+<!-- Optional Malice Block -->
+<div class="form-group" id="malice-block">
+  <label for="malice-text">Malice Abilities (optional)</label>
+  <textarea id="malice-text" rows="10" placeholder="Paste malice abilities here... Use * on its own line to separate abilities. Leave blank for minions."></textarea>
+</div>
+
 
     <button type="button" class="import-button" id="import-button">
       <i class="fas fa-plus"></i> Import Monster

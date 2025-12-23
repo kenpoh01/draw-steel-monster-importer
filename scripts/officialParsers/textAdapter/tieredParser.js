@@ -118,7 +118,10 @@ if (maliceMatch) {
   if (tierLines.length) {
     tierStartIndex = lines.findIndex(l => tierLines.includes(l));
     const parsed = parseTiers(tierLines.join("\n"));
-    console.log("📊 Parsed tiers:", parsed);
+    console.log("T2 CONDITIONS:", parsed.t2?.conditions);
+	console.log("T3 CONDITIONS:", parsed.t3?.conditions);
+
+
     t1 = parsed.t1;
     t2 = parsed.t2;
     t3 = parsed.t3;

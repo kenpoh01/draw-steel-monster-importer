@@ -77,22 +77,22 @@ export function buildEffectGroups(tieredDamage, potencyMap, highestCharacteristi
       );
 
       let display = rawClause || `{{potency}} ${condName}`;
-      display = display.replace(/([maria])<\d+\]/gi, "{{potency}}");
+      display = display.replace(/([marip])<\d+\]/gi, "{{potency}}");
 
-      group.applied[tier] = {
-        display,
-        potency: {
-          value: cond.potency,
-          characteristic: cond.characteristic || "none"
-        },
-        effects: {
-          [condName]: {
-            condition: "failure",
-            end: cond.end || "",
-            properties: []
-          }
-        }
-      };
+ group.applied[tier] = {
+  display,
+  potency: {
+    value: String(cond.potency),
+    characteristic: cond.characteristic || "none"
+  },
+  effects: {
+    [condName]: {
+      condition: "failure",
+      end: cond.end || "",
+      properties: []
+    }
+  }
+};
     });
 
     effectGroups[id] = group;
