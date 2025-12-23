@@ -14,8 +14,13 @@ export async function parseOfficialMonster({ headerObj, features, abilities }) {
   // ---------------------------------------------
   // 1. BASIC ACTOR DATA
   // ---------------------------------------------
-// Organization-based image path
-const actorImagePath = `systems/draw-steel/assets/roles/${headerObj.organization}.webp`;
+// Determine correct icon: minions always use minion.webp
+const iconRole = headerObj.organization === "minion"
+  ? "minion"
+  : headerObj.role;
+
+// Role-based image path
+const actorImagePath = `systems/draw-steel/assets/roles/${iconRole}.webp`;
 
 const actorData = {
   name: headerObj.name || "Unnamed Monster",
