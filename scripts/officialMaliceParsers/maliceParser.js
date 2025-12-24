@@ -8,24 +8,6 @@ import { supportedConditions } from "../keywordParser.js";
 
 /**
  * Parse a full malice block using official Draw Steel formatting.
- *
- * Expected structure:
- *
- * *
- * Guarding Gale 3 Malice
- * <narrative>
- * ! 6 damage
- * @ 10 damage
- * # 13 damage
- *
- * *
- * Breath Weapon 2d10 + 3 5 Malice
- * <narrative>
- * ! ...
- * @ ...
- * # ...
- *
- * The "*" delimiter is REQUIRED and must appear on its own line.
  */
 export function parseMaliceText(rawText) {
   const lines = rawText.split("\n").map(l => l.trim());
@@ -33,7 +15,8 @@ export function parseMaliceText(rawText) {
 
   let current = null;
   let tierLines = [];
-  let narrativeBuffer = [];
+  let narrativeBuffer = [];        // narrative BEFORE tiers
+  let narrativeAfterBuffer = [];   // narrative AFTER tiers (NEW)
   let collectingTier = false;
   let currentTier = "";
   let tierBuffer = [];
@@ -45,6 +28,13 @@ export function parseMaliceText(rawText) {
     narrativeBuffer = [];
   }
 
+  function flushAfterNarrative() {
+    if (!current || narrativeAfterBuffer.length === 0) return;
+    const joined = narrativeAfterBuffer.join(" ");
+    current.system.effect.after += `<p>${enrichNarrative(joined.trim())}</p>`;
+    narrativeAfterBuffer = [];
+  }
+
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
@@ -53,8 +43,8 @@ export function parseMaliceText(rawText) {
     // 1. Detect new malice ability start: "*" on its own line
     // ------------------------------------------------------------
     if (line === "*") {
-      // Finalize previous ability
       flushNarrative("before");
+      flushAfterNarrative();
 
       if (collectingTier && currentTier) {
         tierLines.push(`${currentTier} ${tierBuffer.join(" ")}`.trim());
@@ -70,22 +60,22 @@ export function parseMaliceText(rawText) {
       tierLines = [];
       tierBuffer = [];
       narrativeBuffer = [];
+      narrativeAfterBuffer = [];
       collectingTier = false;
       currentTier = "";
 
-      // Move to header line
       i++;
       continue;
     }
 
     // ------------------------------------------------------------
-    // 2. If we don't have a current ability yet, this line is header
+    // 2. Header
     // ------------------------------------------------------------
     if (!current) {
       const header = parseMaliceHeader(line);
       if (!header) {
         i++;
-        continue; // ignore stray lines before first header
+        continue;
       }
 
       current = {
@@ -121,11 +111,12 @@ export function parseMaliceText(rawText) {
     }
 
     // ------------------------------------------------------------
-    // 3. Detect tier lines: ! @ #
+    // 3. Tier lines
     // ------------------------------------------------------------
     const tierStart = line.match(/^([!@#])\s+(.*)/);
     if (tierStart) {
       flushNarrative("before");
+      flushAfterNarrative();
 
       if (collectingTier && currentTier) {
         tierLines.push(`${currentTier} ${tierBuffer.join(" ")}`.trim());
@@ -159,7 +150,7 @@ export function parseMaliceText(rawText) {
     }
 
     // ------------------------------------------------------------
-    // 5. Narrative or "Effect:" blocks
+    // 5. "Effect:" blocks
     // ------------------------------------------------------------
     if (/^effect:/i.test(line)) {
       const effectText = line.replace(/^effect:/i, "").trim();
@@ -173,15 +164,25 @@ export function parseMaliceText(rawText) {
       continue;
     }
 
-    // Narrative
-    narrativeBuffer.push(line);
+    // ------------------------------------------------------------
+    // 6. Narrative (before or after tiers)
+    // ------------------------------------------------------------
+    if (tierLines.length > 0 && !collectingTier) {
+      // We are in post-tier narrative
+      narrativeAfterBuffer.push(line);
+    } else {
+      // Pre-tier narrative
+      narrativeBuffer.push(line);
+    }
+
     i++;
   }
 
   // ------------------------------------------------------------
-  // 6. Final flush after loop ends
+  // 7. Final flush
   // ------------------------------------------------------------
   flushNarrative("before");
+  flushAfterNarrative();
 
   if (collectingTier && currentTier) {
     tierLines.push(`${currentTier} ${tierBuffer.join(" ")}`.trim());
