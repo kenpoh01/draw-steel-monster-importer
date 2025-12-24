@@ -83,13 +83,13 @@ export function parseMaliceText(rawText) {
         type: "ability",
         img: "icons/magic/unholy/silhouette-robe-evil-power.webp",
         system: {
-          type: "malice",
+          type: "none",
           category: "malice",
           resource: header.cost,
           trigger: `Spend ${header.cost} Malice.`,
           distance: { type: "special" },
           target: { type: "special" },
-          power: { roll: { formula: "", characteristics: [] }, effects: {} },
+		  power: { roll: { formula: "", characteristics: [] }, effects: {} },
           effect: { before: "", after: "" },
           spend: { text: "", value: null },
           source: {
