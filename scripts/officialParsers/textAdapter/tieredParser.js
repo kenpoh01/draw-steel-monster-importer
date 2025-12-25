@@ -55,15 +55,11 @@ function extractKeywords(line) {
  * Parse a unified ability block (tiered or non-tiered).
  */
 export function parseAbilityBlock(lines, headerObj) {
-  console.log("🛠 parseAbilityBlock START ----------------");
-  console.log("📌 Raw lines:", lines);
-
   const header = lines[0];
-  console.log("📌 Header line:", header);
 
   // Extract name
   const name = extractAbilityName(header);
-  console.log("📛 Ability name:", name);
+
 
 // ---------------------------------------------
 // MALICE COST IN HEADER (e.g. "3 Malice")
@@ -81,16 +77,13 @@ if (maliceMatch) {
 
   // Extract keywords
   const keywords = lines.length > 1 ? extractKeywords(lines[1]) : [];
-  console.log("🔑 Keywords:", keywords);
 
   // Distance + target
   let distance = null;
   let target = null;
 
   if (lines.length > 2) {
-    console.log("📏 Raw distance line:", lines[2]);
     const dt = parseDistanceLine("e " + lines[2]);
-    console.log("📐 Parsed distance:", dt);
 
     if (dt) {
       distance = dt.distance;
@@ -98,19 +91,13 @@ if (maliceMatch) {
     }
   }
 
-  console.log("📏 Final distance:", distance);
-  console.log("🎯 Final target:", target);
-
   // -------------------------
   // TIER LINES
   // -------------------------
   const tierLines = lines.filter(l =>
     /^[!@#]/.test(l) ||
-    /^[✦★✸]/.test(l) ||
-    /^(T1|T2|T3|Tier 1|Tier 2|Tier 3)/i.test(l)
+    /^[✦★✸]/.test(l)
   );
-
-  console.log("📚 Tier lines:", tierLines);
 
   let t1 = null, t2 = null, t3 = null;
   let tierStartIndex = -1;
@@ -118,9 +105,6 @@ if (maliceMatch) {
   if (tierLines.length) {
     tierStartIndex = lines.findIndex(l => tierLines.includes(l));
     const parsed = parseTiers(tierLines.join("\n"));
-    console.log("T2 CONDITIONS:", parsed.t2?.conditions);
-	console.log("T3 CONDITIONS:", parsed.t3?.conditions);
-
 
     t1 = parsed.t1;
     t2 = parsed.t2;
@@ -129,7 +113,6 @@ if (maliceMatch) {
 
   // Highest characteristic
   const highest = headerObj?.highestCharacteristic ?? "might";
-  console.log("💪 Highest characteristic:", highest);
 
   // -------------------------
   // EFFECT BEFORE / AFTER
@@ -251,9 +234,6 @@ effectAfter = injectConditionEnrichersIntoText(effectAfter);
     folder: null,
     flags: {}
   };
-
-  console.log("🧩 FINAL ABILITY OBJECT:", ability);
-  console.log("🛠 parseAbilityBlock END ----------------");
 
   return ability;
 }

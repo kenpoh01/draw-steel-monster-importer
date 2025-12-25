@@ -5,9 +5,6 @@ import { normalizeText } from "../preReleaseParsers/normalizeText.js";
  * Splits on "*" separators (used in official PDFs).
  */
 export function parseOfficialText(rawText) {
-  console.log("📥 parseOfficialText called.");
-  console.log("⭐ Incoming text length:", rawText.length);
-  console.log("⭐ Incoming text contains * ?", rawText.includes("*"));
 
   const blocks = rawText.split("*").map(b => b.trim()).filter(Boolean);
   console.log("🔎 Found blocks:", blocks.length);
@@ -17,8 +14,6 @@ export function parseOfficialText(rawText) {
 
   for (const [i, block] of blocks.entries()) {
     const lines = block.split("\n").map(l => l.trim()).filter(Boolean);
-    console.log(`\n📦 Block ${i + 1} header:`, lines[0]);
-    console.log("   ➡ Lines:", lines);
 
     if (!lines.length) continue;
 
@@ -33,17 +28,12 @@ export function parseOfficialText(rawText) {
 
     if (isAbility) {
       const parsedAbility = parseAbilityBlock(lines);
-      console.log("   ✅ Parsed ability:", parsedAbility);
       abilities.push(parsedAbility);
     } else {
       const parsedFeature = parseFeatureBlock(lines);
-      console.log("   ✅ Parsed feature:", parsedFeature);
       features.push(parsedFeature);
     }
   }
-
-  console.log("🎯 Final abilities:", abilities.length);
-  console.log("🎯 Final features:", features.length);
 
   return { features, abilities };
 }
@@ -74,7 +64,6 @@ function parseAbilityBlock(lines) {
   };
 
   const header = lines[0];
-  console.log("   ➡ Ability header:", header);
 
   const diceMatch = header.match(/(\d+d\d+\s*\+\s*\d+)/);
   ability.formula = diceMatch ? diceMatch[1] : "@chr";
@@ -135,8 +124,6 @@ if (ability.type !== "maneuver" && ability.type !== "triggered") {
     if (l.startsWith("@")) ability.effects.push({ t2: normalizeText(l.slice(1).trim()) });
     if (l.startsWith("#")) ability.effects.push({ t3: normalizeText(l.slice(1).trim()) });
   });
-
-  console.log("   ➡ Tiered effects:", ability.effects);
 
   // Effect line
   const effectLine = lines.find(l => /^Effect:/i.test(l));

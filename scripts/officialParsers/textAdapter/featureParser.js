@@ -23,7 +23,6 @@ export function parseFeatureBlock(lines) {
   }
 
   const descriptionHtml = formatFeatureNarrative(descriptionLines);
-  console.log("🧾 [FEATURE PARSED] Description HTML:", descriptionHtml);
 
   // ⭐ NEW: Enrich the narrative so m<3] and similar markers transform
   const enrichedDescriptionHtml = enrichNarrative(descriptionHtml);

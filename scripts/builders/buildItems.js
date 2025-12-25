@@ -101,19 +101,6 @@ export function buildItems(features, abilities, headerObj) {
    * ----------------------- */
   for (const a of abilities) {
 
-    // 🔍 LOG 1 — RAW ABILITY FROM OFFICIAL PARSER
-    console.log("ABILITY RAW:", {
-      name: a.name,
-      t1: a.t1,
-      t2: a.t2,
-      t3: a.t3,
-      t1Text: a.t1Text,
-      t2Text: a.t2Text,
-      t3Text: a.t3Text,
-      potencyMap: a.potencyMap,
-      systemType: a.system?.type
-    });
-
     const effects = normalizeAbilityEffects(a);
 
     const tierInput = {
@@ -121,14 +108,6 @@ export function buildItems(features, abilities, headerObj) {
       t2: a.t2,
       t3: a.t3
     };
-
-    // 🔍 LOG 2 — WHAT WE SEND INTO buildEffectGroups
-    console.log("TIER INPUT TO buildEffectGroups:", {
-      name: a.name,
-      tierInput,
-      potencyMap: a.potencyMap,
-      highestCharacteristic: headerObj.highestCharacteristic
-    });
 
 const hasAnyTier = !!(a.t1 || a.t2 || a.t3);
 
@@ -144,7 +123,6 @@ if (hasAnyTier) {
     headerObj.highestCharacteristic
   );
 } else {
-  console.log(`🚫 Skipping tier effect build for ${a.name} — no tiers present.`);
 }
 
 items.push({

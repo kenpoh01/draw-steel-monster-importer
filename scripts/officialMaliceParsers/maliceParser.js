@@ -5,9 +5,28 @@ import { finalizeEffectTable } from "./maliceEffectTableBuilder.js";
 import { enrichNarrative } from "../narrativeUtils.js";
 import { parseConditionEffect } from "../conditionParser.js";
 import { supportedConditions } from "../keywordParser.js";
+import { parseKeywordLine } from "../keywordParser.js";
 
 /**
  * Parse a full malice block using official Draw Steel formatting.
+ *
+ * Expected structure:
+ *
+ * *
+ * Guarding Gale 3 Malice
+ * <narrative>
+ * ! 6 damage
+ * @ 10 damage
+ * # 13 damage
+ *
+ * *
+ * Breath Weapon 2d10 + 3 5 Malice
+ * <narrative>
+ * ! ...
+ * @ ...
+ * # ...
+ *
+ * The "*" delimiter is REQUIRED and must appear on its own line.
  */
 export function parseMaliceText(rawText) {
   const lines = rawText.split("\n").map(l => l.trim());
@@ -16,10 +35,14 @@ export function parseMaliceText(rawText) {
   let current = null;
   let tierLines = [];
   let narrativeBuffer = [];        // narrative BEFORE tiers
-  let narrativeAfterBuffer = [];   // narrative AFTER tiers (NEW)
+  let narrativeAfterBuffer = [];   // narrative AFTER tiers
   let collectingTier = false;
   let currentTier = "";
   let tierBuffer = [];
+  let expectingMetadata = false;
+
+  // Valid Draw Steel action types (canonical)
+  const ACTION_REGEX = /(Main action|Maneuver|Free maneuver|Reaction|Triggered(?: action)?)$/i;
 
   function flushNarrative(target = "before") {
     if (!current || narrativeBuffer.length === 0) return;
@@ -63,6 +86,7 @@ export function parseMaliceText(rawText) {
       narrativeAfterBuffer = [];
       collectingTier = false;
       currentTier = "";
+      expectingMetadata = false;
 
       i++;
       continue;
@@ -75,7 +99,7 @@ export function parseMaliceText(rawText) {
       const header = parseMaliceHeader(line);
       if (!header) {
         i++;
-        continue;
+        continue; // ignore stray lines before first header
       }
 
       current = {
@@ -83,13 +107,13 @@ export function parseMaliceText(rawText) {
         type: "ability",
         img: "icons/magic/unholy/silhouette-robe-evil-power.webp",
         system: {
-          type: "none",
+          type: "none",   // default; metadata may override
           category: "malice",
           resource: header.cost,
           trigger: `Spend ${header.cost} Malice.`,
           distance: { type: "special" },
           target: { type: "special" },
-		  power: { roll: { formula: "", characteristics: [] }, effects: {} },
+          power: { roll: { formula: "", characteristics: [] }, effects: {} },
           effect: { before: "", after: "" },
           spend: { text: "", value: null },
           source: {
@@ -106,12 +130,34 @@ export function parseMaliceText(rawText) {
         flags: {}
       };
 
+      expectingMetadata = true;
       i++;
       continue;
     }
 
     // ------------------------------------------------------------
-    // 3. Tier lines
+    // 3. Metadata line (keywords + action type)
+    // ------------------------------------------------------------
+    if (expectingMetadata && line.length > 0) {
+      const { type: parsedType, keywords } = parseKeywordLine(line);
+
+      // Only treat as metadata if the line ENDS with a valid action type
+      const actionMatch = line.match(ACTION_REGEX);
+
+      if (actionMatch) {
+        current.system.type = parsedType || "none";
+        current.system.keywords = keywords;
+        expectingMetadata = false;
+        i++;
+        continue;
+      }
+
+      // Otherwise it's narrative
+      expectingMetadata = false;
+    }
+
+    // ------------------------------------------------------------
+    // 4. Detect tier lines: ! @ #
     // ------------------------------------------------------------
     const tierStart = line.match(/^([!@#])\s+(.*)/);
     if (tierStart) {
@@ -131,7 +177,7 @@ export function parseMaliceText(rawText) {
     }
 
     // ------------------------------------------------------------
-    // 4. Continue collecting tier lines
+    // 5. Continue collecting tier lines
     // ------------------------------------------------------------
     if (collectingTier) {
       const isNewTier = /^[!@#]\s+/.test(line);
@@ -150,7 +196,7 @@ export function parseMaliceText(rawText) {
     }
 
     // ------------------------------------------------------------
-    // 5. "Effect:" blocks
+    // 6. "Effect:" blocks
     // ------------------------------------------------------------
     if (/^effect:/i.test(line)) {
       const effectText = line.replace(/^effect:/i, "").trim();
@@ -165,13 +211,11 @@ export function parseMaliceText(rawText) {
     }
 
     // ------------------------------------------------------------
-    // 6. Narrative (before or after tiers)
+    // 7. Narrative (before or after tiers)
     // ------------------------------------------------------------
     if (tierLines.length > 0 && !collectingTier) {
-      // We are in post-tier narrative
       narrativeAfterBuffer.push(line);
     } else {
-      // Pre-tier narrative
       narrativeBuffer.push(line);
     }
 
@@ -179,7 +223,7 @@ export function parseMaliceText(rawText) {
   }
 
   // ------------------------------------------------------------
-  // 7. Final flush
+  // 8. Final flush
   // ------------------------------------------------------------
   flushNarrative("before");
   flushAfterNarrative();

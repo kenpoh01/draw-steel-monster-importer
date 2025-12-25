@@ -10,7 +10,6 @@
  */
 
 export function formatFeatureNarrative(lines) {
-  console.log("🟦 [FEATURE FORMAT] Incoming lines:", JSON.stringify(lines, null, 2));
 
   if (!Array.isArray(lines) || !lines.length) return "";
 
@@ -19,21 +18,16 @@ export function formatFeatureNarrative(lines) {
     .map(l => (l ?? "").replace(/^\*+|\*+$/g, "").trim())
     .filter(l => l.length > 0);
 
-  console.log("🟩 [FEATURE FORMAT] Cleaned lines:", JSON.stringify(cleaned, null, 2));
-
   if (!cleaned.length) return "";
 
   // Merge wrapped lines
   let body = cleaned.join(" ").trim();
-  console.log("🟧 [FEATURE FORMAT] Merged body:", JSON.stringify(body));
 
   // Normalize Unicode punctuation
   body = body
     .replace(/\u00A0/g, " ")
     .replace(/[\u2024\u2025\u2026\uFE52\uFF0E\uFF61\u3002\u2027]/g, ".")
     .replace(/\.{2,}/g, ".");
-
-  console.log("🟪 [FEATURE FORMAT] After punctuation normalization:", JSON.stringify(body));
 
 // Find all labels of the form "X:" where X starts with capital,
 // contains no ":" or "." (so it can't swallow whole sentences)
@@ -45,10 +39,8 @@ while ((match = labelRegex.exec(body)) !== null) {
   labels.push({ label: match[1], index: match.index });
 }
 
-console.log("🟫 [FEATURE FORMAT] Detected labels:", labels);
 
 if (labels.length === 0) {
-  console.log("🟫 [FEATURE FORMAT] Unlabelled feature → single paragraph.");
   return `<p>${body}</p>`;
 }
 
@@ -61,18 +53,11 @@ for (let i = 0; i < labels.length; i++) {
   const labelEnd = index + label.length;
   const paragraphBody = body.slice(labelEnd, nextIndex).trim();
 
-  console.log("🟩 [FEATURE FORMAT] Paragraph slice:", {
-    label,
-    from: labelEnd,
-    to: nextIndex,
-    paragraphBody
-  });
 
   paragraphs.push(
     `<p><strong>${label}</strong> ${paragraphBody}</p>`
   );
 }
 
-console.log("🟦 [FEATURE FORMAT] Final paragraphs:", paragraphs);
 return paragraphs.join("\n");
 }
