@@ -12,4 +12,5 @@ ALSO NOTE: you have to put an * between the header and each ability to help the 
 
 https://github.com/user-attachments/assets/7880fea8-20a1-4e86-af96-7d5d93cfbe43
 
-
+If you find this useful, please consider leaving a tip.  
+https://ko-fi.com/kenpoh
