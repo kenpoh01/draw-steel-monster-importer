@@ -122,8 +122,7 @@ export function parseNonTieredAbility(lines, headerObj) {
       source: { book: "", page: "", license: "" },
       story: "",
       resource: null,
-      trigger: "",
-      _dsid: name.toLowerCase().replace(/\s+/g, "-")
+      trigger: ""
     },
 
     t1: null,

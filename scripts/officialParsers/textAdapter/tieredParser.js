@@ -222,8 +222,7 @@ effectAfter = injectConditionEnrichersIntoText(effectAfter);
       source: { book: "", page: "", license: "" },
       story: "",
       resource: maliceCost,
-      trigger: "",
-      _dsid: name.toLowerCase().replace(/\s+/g, "-")
+      trigger: ""
     },
 
     t1,
