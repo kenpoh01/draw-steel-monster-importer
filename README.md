@@ -1,4 +1,5 @@
 Draw Steel PDF Monster Importer for Foundryvtt
+Please note that A.I. in the form of Copilot and ChatGPT was used to help create this module when it comes to coding.
 
 This is a module for the FoundryVTT to import Draw Steel Monsters from the MCDM Heroes pdf.
 
