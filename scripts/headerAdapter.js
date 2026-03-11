@@ -119,7 +119,8 @@ if (nameLine) {
   // "3 8 350 3 6"
   // Size Speed Stamina Stability Free Strike
   // ---------------------------------------------
-  const statNumbers = lines.find(l => /^\d+\s+\d+\s+\d+\s+\d+\s+\d+/.test(l));
+  const statNumbers = lines.find(l => /^(1[TSML]?|[2-9])\s+\d+\s+\d+\s+\d+\s+\d+/
+.test(l));
   if (statNumbers) {
     const [size, speed, stamina, stability, freeStrike] = statNumbers
       .split(/\s+/)

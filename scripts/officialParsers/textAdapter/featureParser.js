@@ -42,8 +42,7 @@ export function parseFeatureBlock(lines) {
       source: { book: "", page: "", license: "" },
       story: "",
       resource: null,
-      trigger: "",
-      _dsid: name.toLowerCase().replace(/\s+/g, "-")
+      trigger: ""
     },
 
     effects: [],
