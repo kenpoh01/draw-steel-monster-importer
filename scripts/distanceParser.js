@@ -1,5 +1,6 @@
 // distanceParser.js
 import { parseTarget } from "./tierParser.js";
+import { normalizeText } from "./normalizeText.js";
 
 /**
  * Parses a distance/target line like:
@@ -16,6 +17,12 @@ import { parseTarget } from "./tierParser.js";
 export function parseDistanceLine(line = "") {
   if (!line || typeof line !== "string") return null;
 
+ // Normalize first — removes zero-width characters, NBSP, weird spaces, etc.
+  line = normalizeText(line);
+
+
+
+
   // Strip optional leading "e " (legacy format)
   const raw = line.startsWith("e ") ? line.slice(2).trim() : line.trim();
   const lowerRaw = raw.toLowerCase();
@@ -30,7 +37,7 @@ export function parseDistanceLine(line = "") {
 
   // --- SPLIT DISTANCE + TARGET ---------------------------------------------
   // Look for the start of a target phrase (each, all, one, two, any, every)
-  const targetStart = lowerRaw.search(/\b(each|all|every|one|two|three|any)\b/);
+  const targetStart = lowerRaw.search(/\b(each|all|every|one|two|three|any|special)\b/);
 
   let distancePart = raw;
   let targetPart = "";
@@ -43,20 +50,8 @@ export function parseDistanceLine(line = "") {
   let distance = {};
   const target = parseTarget(targetPart);
 
-// -------------------------
-// X <shape> within Y
-// -------------------------
-const withinRegex = /(\d+)\s*(cube|burst|line|cone)\s+within\s+(\d+)/i;
-const withinMatch = distancePart.match(withinRegex);
-if (withinMatch) {
-  distance = {
-    type: withinMatch[2].toLowerCase(),
-    primary: Number(withinMatch[1]),
-    secondary: null,
-    tertiary: Number(withinMatch[3])
-  };
-  return { distance, target };
-}
+
+
 
   // --- WALL -----------------------------------------------------------------
   const wallMatch = distancePart.match(/^(\d+)\s+wall\s+within\s+(\d+)$/i);
