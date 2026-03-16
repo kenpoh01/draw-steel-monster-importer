@@ -84,6 +84,9 @@ function parseAbilityBlock(lines) {
   // Keywords vs action type
   const keywordsLine = lines.find(l => /(Melee|Area|Ranged|Weapon|Magic|Strike)/i.test(l)) || "";
   ability.keywords = keywordsLine
+  
+  console.log("keywordsLine from textAdapter:", keywordsLine);
+  
     .replace(/\b(Main action|Triggered action|Maneuver)\b/ig, "")
     .split(/,\s*/)
     .map(k => k.toLowerCase())
@@ -102,6 +105,8 @@ if (/maneuver/i.test(keywordsLine) || /maneuver/i.test(header)) {
 } else {
   ability.type = "main";
 }
+
+console.log("Ability Type", ability.type);
 
 // Only assign raw distance/target if not maneuver/triggered
 if (ability.type !== "maneuver" && ability.type !== "triggered") {

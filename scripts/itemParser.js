@@ -50,6 +50,5 @@ export function parseItems(traits = [], abilities = [], rawData = {}) {
     // do NOT rebuild or overwrite its system data
     items.push(ability);
   });
-
   return items;
 }

@@ -41,11 +41,20 @@ export function normalizeTextPreserveLines(rawText = "") {
 
     // Unicode punctuation fixes
     .replace(/Ō/g, "o")
-    .replace(/−|–|—/g, "-")   // normalize all dashes to ASCII hyphen
+// Normalize all dashes to ASCII hyphen
+.replace(/−|–|—/g, "-")
+// Normalize "-o" keyword marker (after dash normalization)
+.replace(/-\s*o\b/gi, "-")
+
 
     // Normalize Windows/Mac line endings to LF
     .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n");
+    .replace(/\r/g, "\n")
+	
+	 // NEW: Remove zero-width characters
+  .replace(/[\u200B-\u200D\uFEFF]/g, "");
+
+
 
   // Collapse horizontal whitespace *within* lines only
   return normalized
@@ -76,7 +85,10 @@ export function normalizeText(rawText = "") {
 
     // Unicode punctuation fixes
     .replace(/Ō/g, "o")
-    .replace(/−|–|—/g, "-")
+// Normalize all dashes to ASCII hyphen
+.replace(/−|–|—/g, "-")
+// Normalize "-o" keyword marker (after dash normalization)
+.replace(/-\s*o\b/gi, "-")
 
     // Collapse horizontal whitespace only
     .replace(/[ \t]+/g, " ")

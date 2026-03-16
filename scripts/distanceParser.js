@@ -19,6 +19,14 @@ export function parseDistanceLine(line = "") {
   // Strip optional leading "e " (legacy format)
   const raw = line.startsWith("e ") ? line.slice(2).trim() : line.trim();
   const lowerRaw = raw.toLowerCase();
+  
+    // --- SPECIAL CASE: "Self x Self" -----------------------------------------
+  if (/^self\s*[×x]\s*self$/i.test(lowerRaw)) {
+    return {
+      distance: { type: "self", primary: 0 },
+      target:   { type: "self", value: null }
+    };
+  }
 
   // --- SPLIT DISTANCE + TARGET ---------------------------------------------
   // Look for the start of a target phrase (each, all, one, two, any, every)
@@ -76,7 +84,7 @@ if (withinMatch) {
   }
 
   // --- CUBE -----------------------------------------------------------------
-  const cubeMatch = distancePart.match(/^(\d+)\s+cube\s+within\s+(\d+)$/i);
+  const cubeMatch = distancePart.match(/^(\d+)\s+cube\s+within\s+(\d+)\s*$/i);
   if (cubeMatch) {
     const [, size, range] = cubeMatch;
     distance = {
@@ -88,7 +96,7 @@ if (withinMatch) {
   }
 
   // --- BURST ----------------------------------------------------------------
-  const burstMatch = distancePart.match(/^(\d+)\s+burst$/i);
+  const burstMatch = distancePart.match(/^(\d+)\s+burst\b/i);
   if (burstMatch) {
     const [, size] = burstMatch;
     distance = {

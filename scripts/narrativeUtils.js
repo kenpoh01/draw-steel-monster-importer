@@ -9,13 +9,18 @@ export function enrichNarrative(text) {
     .replace(/\s{2,}/g, " ")
     .trim();
 
-  const withDamage = collapsed.replace(/(\d+)\s*(\w+)?\s*damage/gi, (_, value, type) => {
+const withDamage = collapsed.replace(
+  /((\d+d\d+(?:\s*\+\s*\d+)?)|\d+)\s*(\w+)?\s*damage/gi,
+  (_, amount, _dice, type) => {
     const dmgType = type?.toLowerCase();
     const enriched = dmgType && dmgType !== "damage"
-      ? `[[/damage ${value} ${dmgType}]] damage`
-      : `[[/damage ${value}]] damage`;
+      ? `[[/damage ${amount} ${dmgType}]] damage`
+      : `[[/damage ${amount}]] damage`;
     return enriched;
-  });
+  }
+);
+
+
 
   const skillList = ["Might", "Intuition", "Agility", "Reason", "Presence"];
   const skillRegex = new RegExp(`\\b(${skillList.join("|")})\\s+test\\b`, "gi");

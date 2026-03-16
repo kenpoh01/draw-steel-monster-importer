@@ -76,6 +76,5 @@ export function parseOfficialText(rawText) {
     if (a?.length) abilities.push(...a);
     if (f?.length) features.push(...f);
   });
-
   return { header, features, abilities };
 }

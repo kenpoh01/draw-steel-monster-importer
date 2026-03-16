@@ -199,7 +199,9 @@ export function parseTarget(targetText) {
   if (lower.includes("creatures or objects")) type = "creatureObject";
   else if (lower.includes("creature")) type = "creature";
   else if (lower.includes("object")) type = "object";
+  else if (lower.includes("enemies")) type = "enemy";
   else if (lower.includes("enemy")) type = "enemy";
+  else if (lower.includes("allies")) type = "ally";
   else if (lower.includes("ally")) type = "ally";
   else if (lower.includes("self or ally")) type = "selfOrAlly";
   else if (lower.includes("self or creature")) type = "selfOrCreature";

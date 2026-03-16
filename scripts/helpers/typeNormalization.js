@@ -7,6 +7,7 @@ export function normalizeType(type = "", cost = "") {
     "free maneuver": "freeManeuver",
     "triggered action": "triggered",
     "free triggered action": "freeTriggered",
+	"villain action": "villain",
     "no action": "none"
   };
 

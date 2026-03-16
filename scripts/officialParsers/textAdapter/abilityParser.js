@@ -7,8 +7,10 @@ import { parseFeatureBlock } from "./featureParser.js";
  * Detect whether a line is a book-format distance line.
  */
 function isBookDistance(line = "") {
-  // Normalize Unicode × variants to ASCII x
-  const normalized = line.replace(/[\u00D7\u2715\u2A09\u2573]/g, "x");
+  const normalized = line
+    // Normalize × variants to ASCII x
+    .replace(/[\u00D7\u2715\u2A09\u2573]/g, "x");
+
 
   return (
     /^Melee\s+\d+/i.test(normalized) ||
@@ -17,6 +19,13 @@ function isBookDistance(line = "") {
     /^\d+\s*cube\b/i.test(normalized) ||
     /^\d+\s*x\s*\d+\s+line\b/i.test(normalized) ||
     /^\d+\s*cube\s+within\b/i.test(normalized) ||
+	    // NEW: burst pattern
+    /^\d+\s+burst\b/i.test(normalized) ||
+
+    // NEW: burst-within pattern
+    /^\d+\s+burst\s+within\b/i.test(normalized)||
+
+
     /^\d+\s*x\s*\d+\s+line\s+within\b/i.test(normalized)
   );
 }
