@@ -3,12 +3,14 @@
   "title": "Draw Steel Monster Importer",
   "description": "UI-based importer for Draw Steel monster stat blocks from pre-release and official PDF text, or JSON files.",
   "version": "1.0.0",
-  "author": "Kenpoh & Copilot",
+  "authors": [
+  {"name":"Kenpoh & Copilot"
+  }
+  ],
   "compatibility": {
     "minimum": "13",
     "verified": "13"
   },
-  "systems": ["draw-steel"],
   "esmodules": [
     "scripts/monster-importer.js"
   ],
