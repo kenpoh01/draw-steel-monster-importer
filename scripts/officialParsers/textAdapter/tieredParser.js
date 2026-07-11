@@ -57,10 +57,8 @@ function extractKeywords(line) {
 export function parseAbilityBlock(lines, headerObj) {
   const header = lines[0];
 
-  lines[0] = lines[0].replace(/^(?:[mtglfbcdr!\)]|a(?=\s[A-Z]))\s+/, "");
-
   // Extract name
-  const name = extractAbilityName(lines[0]);
+  const name = extractAbilityName(header);
 
 
 // ---------------------------------------------
@@ -96,48 +94,18 @@ if (maliceMatch) {
   // -------------------------
   // TIER LINES
   // -------------------------
-  // A tier section can wrap across multiple physical lines (e.g. "! 19
-  // damage; pull 6; the target is slowed (save ends) unless their" /
-  // "player gives Peero a compliment they haven't heard before" is ONE
-  // tier's text across two lines). Only the first physical line of each
-  // tier carries the marker — the rest must be captured too, or that
-  // trailing text is lost entirely rather than just misfiled.
-  const TIER_START_RE =
-    /^(?:[áéí]|[!@#]|[✦★✸]|(?:≤|<=|<)\s*1[0-1]\b|1[2-6]\s*[–-]\s*1[2-6]\b|1[7-9]\+(?=\D|$))/;
-  const LABEL_RE = /^(effect|trigger|special)\s*:/i;
-
-  let tierStartIndex = lines.findIndex(l => TIER_START_RE.test(l.trim()));
-  let tierSectionEndIndex = tierStartIndex; // exclusive
-
-  if (tierStartIndex !== -1) {
-    let tiersSeen = 1;
-    tierSectionEndIndex = tierStartIndex + 1;
-    for (let i = tierStartIndex + 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (LABEL_RE.test(line)) break;
-
-      if (TIER_START_RE.test(line)) {
-        tiersSeen++;
-        tierSectionEndIndex = i + 1;
-        continue;
-      }
-
-      // A capitalized line after all 3 tiers are already found is
-      // trailing narrative, not more tier text — genuine wrapped tier
-      // continuations in practice always start lowercase, since they're
-      // literally the middle of a sentence fragment.
-      if (tiersSeen >= 3 && /^[A-Z]/.test(line)) break;
-
-      tierSectionEndIndex = i + 1;
-    }
-  }
-
-  const tierSectionLines =
-    tierStartIndex !== -1 ? lines.slice(tierStartIndex, tierSectionEndIndex) : [];
+  const tierLines = lines.filter(l =>
+    /^[!@#]/.test(l) ||
+    /^[✦★✸]/.test(l)
+  );
 
   let t1 = null, t2 = null, t3 = null;
-  if (tierSectionLines.length) {
-    const parsed = parseTiers(tierSectionLines.join("\n"));
+  let tierStartIndex = -1;
+
+  if (tierLines.length) {
+    tierStartIndex = lines.findIndex(l => tierLines.includes(l));
+    const parsed = parseTiers(tierLines.join("\n"));
+
     t1 = parsed.t1;
     t2 = parsed.t2;
     t3 = parsed.t3;
@@ -147,80 +115,77 @@ if (maliceMatch) {
   const highest = headerObj?.highestCharacteristic ?? "might";
 
   // -------------------------
-  // TRIGGER / EFFECT / SPECIAL
+  // EFFECT BEFORE / AFTER
   // -------------------------
-  // Single forward pass: skip the fixed name/keyword/distance preamble
-  // and the tier section (already captured above), then attribute every
-  // remaining line to whichever labeled paragraph is currently open —
-  // "Trigger:" goes to the trigger field, "Effect:"/"Special:" go to
-  // effect.before or effect.after depending on whether they fall before
-  // or after the tier section. A line with no label yet still gets
-  // folded into whichever paragraph is currently open (multi-line
-  // wrapping), and any trailing narrative with no explicit label at all
-  // (common right after the tier lines) is still captured as
-  // effect.after rather than silently dropped.
-  let trigger = "";
   let effectBefore = "";
   let effectAfter = "";
-  let mode = null; // "trigger" | "before" | "after" | null
-
-  const preambleEnd = Math.min(3, lines.length);
+  let inEffect = false;
+  let effectStartedAt = -1;
 
   for (let i = 0; i < lines.length; i++) {
-    if (i < preambleEnd) continue;
-    if (tierStartIndex !== -1 && i >= tierStartIndex && i < tierSectionEndIndex) continue;
-
-    if (tierStartIndex !== -1 && i === tierSectionEndIndex && mode === "before") {
-      mode = "after";
-    }
-
     const line = lines[i].trim();
-    if (!line) continue;
 
-    const labelMatch = line.match(/^(effect|trigger|special)\s*:\s*(.*)/i);
-    if (labelMatch) {
-      const label = labelMatch[1].toLowerCase();
-      const remainder = labelMatch[2];
+    // Start of Effect block
+    if (/^effect:/i.test(line)) {
+      inEffect = true;
+      effectStartedAt = i;
 
-      if (label === "trigger") {
-        mode = "trigger";
-        if (remainder) trigger += remainder + " ";
-        continue;
-      }
-
-      const prefix = label === "special" ? "Special: " : "";
-      mode = (tierStartIndex === -1 || i < tierStartIndex) ? "before" : "after";
+      const remainder = line.replace(/^effect:\s*/i, "");
       if (remainder) {
-        if (mode === "before") effectBefore += prefix + remainder + "\n";
-        else effectAfter += prefix + remainder + "\n";
+        if (tierStartIndex === -1 || i < tierStartIndex) effectBefore += remainder + "\n";
+        else effectAfter += remainder + "\n";
       }
       continue;
     }
 
-    if (mode === "trigger") {
-      trigger += line + " ";
-    } else if (mode === "before") {
-      effectBefore += line + "\n";
-    } else if (mode === "after") {
-      effectAfter += line + "\n";
-    } else if (tierStartIndex === -1 || i < tierStartIndex) {
-      effectBefore += line + "\n";
-    } else if (i >= tierSectionEndIndex) {
-      effectAfter += line + "\n";
+    // End of Effect block
+    if (inEffect && /^\*/.test(line)) {
+      inEffect = false;
+      continue;
+    }
+
+    // Inside Effect block
+    if (inEffect) {
+      if (tierStartIndex === -1 || effectStartedAt < tierStartIndex) {
+        effectBefore += line + "\n";
+      } else {
+        effectAfter += line + "\n";
+      }
     }
   }
 
-  trigger = trigger.trim();
   effectBefore = effectBefore.trim();
   effectAfter = effectAfter.trim();
+  
+  // ---------------------------------------------
+// IMPLICIT EFFECT BLOCK (after tiers, before "*")
+// ---------------------------------------------
+if (!effectBefore && !effectAfter && tierStartIndex !== -1) {
+  let implicit = "";
 
-  // First enrich narrative normally
-  effectBefore = enrichNarrative(effectBefore);
-  effectAfter = enrichNarrative(effectAfter);
+  const afterTierIndex = tierStartIndex + tierLines.length;
 
-  // Then inject clickable condition enrichers (no mechanical effects)
-  effectBefore = injectConditionEnrichersIntoText(effectBefore);
-  effectAfter = injectConditionEnrichersIntoText(effectAfter);
+  for (let i = afterTierIndex; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    if (line === "*") break;
+    if (!line.length) continue;
+    if (/^effect:/i.test(line)) continue;
+
+    implicit += line + "\n";
+  }
+
+  effectAfter = implicit.trim();
+}
+
+
+// First enrich narrative normally
+effectBefore = enrichNarrative(effectBefore);
+effectAfter = enrichNarrative(effectAfter);
+
+// Then inject clickable condition enrichers (no mechanical effects)
+effectBefore = injectConditionEnrichersIntoText(effectBefore);
+effectAfter = injectConditionEnrichersIntoText(effectAfter);
 
   // -------------------------
   // BUILD ABILITY OBJECT
@@ -257,7 +222,7 @@ if (maliceMatch) {
       source: { book: "", page: "", license: "" },
       story: "",
       resource: maliceCost,
-      trigger
+      trigger: ""
     },
 
     t1,

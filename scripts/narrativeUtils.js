@@ -30,7 +30,7 @@ const withDamage = collapsed.replace(
   });
 
   const skillInitials = ["m", "i", "a", "r", "p"];
-  const skillRangeRegex = new RegExp(`\\b([${skillInitials.join("")}])\\s*<\\s*([0-9]+)\\s*]`, "gi");
+  const skillRangeRegex = new RegExp(`\\b([${skillInitials.join("")}])<([0-9]+)]`, "gi");
 
   const withSkillRanges = withSkills.replace(skillRangeRegex, (_, letter, num) => {
     return `${letter.toUpperCase()}<${num}`;

@@ -29,7 +29,6 @@ export function parseHeaderLines(block) {
     presence: 0,
 
     size: 1,
-    sizeLetter: "M",
     speed: 4,
     stamina: 1,
     stability: 0,
@@ -116,97 +115,22 @@ if (nameLine) {
 
   // ---------------------------------------------
   // 4. SIZE / SPEED / STAMINA / STABILITY / FREE STRIKE
-  // Supports three known layouts, depending on PDF extraction tool:
-  //   Plain:      "3 8 350 3 6"          or  "1L 7 700 2 11"
-  //   Piped:      "1S|Size| 5|Speed| 10 |Stamina| 0|Stability| 3|Free Strike"
-  //   Alternating: each value and label on its own line —
-  //     "2" / "Size" / "5" / "Speed" / "100" / "Stamina" / "1" /
-  //     "Stabilty" / "5" / "Free Strike"
-  //     (note: some extractions misspell "Stability" as "Stabilty" —
-  //     matched with a loose "stabil" prefix rather than an exact word)
-  // The size token may carry a letter suffix (T/S/M/L) for
-  // Tiny/Small/Medium/Large creatures — this must be captured separately,
-  // not blindly Number()-converted along with the rest of the line.
-  // Stability is sometimes "All" instead of a number (a real Draw Steel
-  // rule meaning immune to all forced movement). The system schema field
-  // is numeric, so this is stored as 999 — a placeholder sentinel, not a
-  // literal game value — rather than defaulting to 0, which would
-  // silently mean the opposite (no resistance at all).
+  // Example:
+  // "3 8 350 3 6"
+  // Size Speed Stamina Stability Free Strike
   // ---------------------------------------------
-  let statParsed = null;
-  let statConsumedLines = [];
+  const statNumbers = lines.find(l => /^(1[TSML]?|[2-9])\s+\d+\s+\d+\s+\d+\s+\d+/
+.test(l));
+  if (statNumbers) {
+    const [size, speed, stamina, stability, freeStrike] = statNumbers
+      .split(/\s+/)
+      .map(n => Number(n));
 
-  for (let i = 0; i + 9 < lines.length; i++) {
-    if (
-      /^\d+[TSML]?$/i.test(lines[i]) && /^size$/i.test(lines[i + 1]) &&
-      /^\d+$/.test(lines[i + 2]) && /^speed$/i.test(lines[i + 3]) &&
-      /^\d+$/.test(lines[i + 4]) && /^stamina$/i.test(lines[i + 5]) &&
-      /^(?:\d+|all)$/i.test(lines[i + 6]) && /^stabil\w*$/i.test(lines[i + 7]) &&
-      /^\d+$/.test(lines[i + 8]) && /^free\s*strike$/i.test(lines[i + 9])
-    ) {
-      const sizeMatch = lines[i].match(/^(\d+)([TSML]?)$/i);
-      statParsed = {
-        size: Number(sizeMatch[1]),
-        sizeLetter: sizeMatch[2] || "M",
-        speed: Number(lines[i + 2]),
-        stamina: Number(lines[i + 4]),
-        stability: /^\d+$/.test(lines[i + 6]) ? Number(lines[i + 6]) : 999,
-        freeStrike: Number(lines[i + 8])
-      };
-      statConsumedLines = lines.slice(i, i + 10);
-      break;
-    }
-  }
-
-  const statNumbersLine = statParsed ? null : lines.find(l =>
-    /^\d+[TSML]?(\s+\d+\s+\d+\s+(?:\d+|all)\s+\d+\s*$|\|)/i.test(l)
-  );
-
-  if (statNumbersLine) {
-    let parsed = null;
-
-    if (statNumbersLine.includes("|")) {
-      const sizeMatch = statNumbersLine.match(/^(\d+)([TSML]?)\s*\|/i);
-      const speedMatch = statNumbersLine.match(/\|\s*(\d+)\s*\|\s*Speed/i);
-      const staminaMatch = statNumbersLine.match(/\|\s*(\d+)\s*\|\s*Stamina/i);
-      const stabilityMatch = statNumbersLine.match(/\|\s*(\d+|all)\s*\|\s*Stability/i);
-      const freeStrikeMatch = statNumbersLine.match(/\|\s*(\d+)\s*\|\s*Free\s*Strike/i);
-
-      if (sizeMatch && speedMatch && staminaMatch && stabilityMatch && freeStrikeMatch) {
-        parsed = {
-          size: Number(sizeMatch[1]),
-          sizeLetter: sizeMatch[2] || "M",
-          speed: Number(speedMatch[1]),
-          stamina: Number(staminaMatch[1]),
-          stability: /^\d+$/.test(stabilityMatch[1]) ? Number(stabilityMatch[1]) : 999,
-          freeStrike: Number(freeStrikeMatch[1])
-        };
-      }
-    } else {
-      const m = statNumbersLine.match(/^(\d+)([TSML]?)\s+(\d+)\s+(\d+)\s+(\d+|all)\s+(\d+)\s*$/i);
-      if (m) {
-        parsed = {
-          size: Number(m[1]),
-          sizeLetter: m[2] || "M",
-          speed: Number(m[3]),
-          stamina: Number(m[4]),
-          stability: /^\d+$/.test(m[5]) ? Number(m[5]) : 999,
-          freeStrike: Number(m[6])
-        };
-      }
-    }
-
-    statParsed = parsed;
-  }
-
-  if (statParsed) {
-    const parsed = statParsed;
-    headerObj.size = parsed.size;
-    headerObj.sizeLetter = parsed.sizeLetter;
-    headerObj.speed = parsed.speed;
-    headerObj.stamina = parsed.stamina;
-    headerObj.stability = parsed.stability;
-    headerObj.freeStrike = parsed.freeStrike;
+    headerObj.size = size;
+    headerObj.speed = speed;
+    headerObj.stamina = stamina;
+    headerObj.stability = stability;
+    headerObj.freeStrike = freeStrike;
   }
 
   // ---------------------------------------------
@@ -240,13 +164,6 @@ if (nameLine) {
       }
     }
   }
-
-  // ---------------------------------------------
-  // 6a. CAPTION LINE (no data, just noise)
-  // Some layouts print a plain label row under the stat-numbers line:
-  // "Size Speed Stamina Stability Free Strike"
-  // ---------------------------------------------
-  const captionLine = lines.find(l => /^Size\s+Speed\s+Stamina\s+Stability\s+Free\s+Strike\s*$/i.test(l));
 
   // ---------------------------------------------
   // 6. MOVEMENT TYPES + WITH CAPTAIN
@@ -288,13 +205,6 @@ if (nameLine) {
     headerObj.movementTypes = types;
     headerObj.withCaptain = withCaptain;
   }
-
-  // Lines consumed by header parsing, so the caller can remove them from
-  // the remaining text before splitting the ability/feature body.
-  headerObj._consumedLines = new Set(
-    [nameLine, keywordLine, statLine, statNumbersLine, resistLine, captionLine, movementLine, ...statConsumedLines]
-      .filter(Boolean)
-  );
 
   return headerObj;
 }

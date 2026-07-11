@@ -28,11 +28,8 @@ export function parseTierText(text = "", tier = "t1") {
 
   // Strip tier glyphs/labels
   working = working
-    .replace(/^[[áéí✦★✸!@#]\s*/, "")
+    .replace(/^[✦★✸!@#]\s*/, "")
     .replace(/^(t1|tier 1|t2|tier 2|t3|tier 3)[:\-]?\s*/i, "")
-    .replace(/^(?:≤|<=|<)\s*11\s*:?\s*/, "")
-    .replace(/^12\s*[–-]\s*16\s*:?\s*/, "")
-    .replace(/^17\+\s*:?\s*/, "")
     .trim();
 
   // -------------------------
@@ -78,18 +75,17 @@ export function parseTierText(text = "", tier = "t1") {
   for (const clause of clauses) {
     result.rawClauses.push(clause);
 
-    const conditionEnd = detectConditionEnd(clause);
+    const saveEnds = /\(save ends\)/i.test(clause);
 
-    // POTENCY (p<1], p<2], etc.) — tolerate a stray space after "<"
-    // (some PDF extractions render "m< 2]" instead of "m<2]").
+    // POTENCY (p<1], p<2], etc.)
     let numericPotency = null;
-    const potencyMatch = clause.match(/p<\s*(\d+)\]/i);
+    const potencyMatch = clause.match(/p<(\d+)\]/i);
     if (potencyMatch) {
       numericPotency = Number(potencyMatch[1]);
     }
 
     // CHARACTERISTIC POTENCY (m<1], a<2], r<1], i<3], p<1])
-    const charMatch = clause.match(/([marip])<\s*\d+\]/i);
+    const charMatch = clause.match(/([marip])<\d+\]/i);
     let characteristic = "none";
     if (charMatch) {
       const key = charMatch[1].toLowerCase();
@@ -102,11 +98,10 @@ export function parseTierText(text = "", tier = "t1") {
       }[key] || "none";
     }
 
-    // CONDITION TEXT — allow apostrophes (can't, doesn't) and any trailing
-    // duration parenthetical, not just "(save ends)" specifically.
+    // CONDITION TEXT
     let condMatch =
-      clause.match(/\bthey\s+are\s+([a-z' ]+?)(?:\s*\([^)]*\))?$/i) ||
-      clause.match(/\]\s*([a-z' ]+?)(?:\s*\([^)]*\))?$/i);
+      clause.match(/\bthey\s+are\s+([a-z ]+?)(?:\s*\(save ends\))?$/i) ||
+      clause.match(/\]\s*([a-z ]+?)(?:\s*\(save ends\))?$/i);
 
     if (condMatch) {
       const conditionText = condMatch[1].trim();
@@ -124,41 +119,18 @@ export function parseTierText(text = "", tier = "t1") {
 
         result.conditions.push({
           name,
-          end: conditionEnd,
+          end: saveEnds ? "save" : "",
           potency: potencyValue,
           characteristic
         });
       }
     } else {
-      // A clause that's just a bare potency marker with nothing else
-      // attached (e.g. "p<2]" gating the forced-movement effect handled
-      // above, rather than a condition) carries no separate narrative —
-      // don't leak the raw, unprocessed marker text.
-      const bareMarker = /^(?:[marip]<\s*\d+\])\s*$/i.test(clause);
-      if (!bareMarker) {
-        result.narrative += clause + " ";
-      }
+      result.narrative += clause + " ";
     }
   }
 
   result.narrative = result.narrative.trim();
   return result;
-}
-
-/**
- * Detect a duration tag on a condition clause and normalize it to the
- * same "end" vocabulary durationParser.js already uses ("save", "turn",
- * "round", "encounter"). Draw Steel PDFs express this a few different
- * ways: "(save ends)", "(EoT)"/"(end of turn)", etc.
- */
-function detectConditionEnd(clause) {
-  const lower = clause.toLowerCase();
-  if (/\(save ends\)/.test(lower)) return "save";
-  if (/\(eot\)/.test(lower) || /end of turn/.test(lower)) return "turn";
-  if (/start of turn/.test(lower)) return "startOfTurn";
-  if (/end of (the )?round/.test(lower)) return "round";
-  if (/end of (the )?encounter/.test(lower)) return "encounter";
-  return "";
 }
 
 /**
@@ -177,44 +149,20 @@ export function parseTiers(rawAbilityText = "") {
   for (const line of lines) {
     const trimmed = line.trim();
 
-    // Determine tier based on leading glyph
-if (/^[á✦!]/.test(trimmed)) {
-  // tier 1: á, ✦, !
-  currentTier = "t1";
-  buffers.t1.push(trimmed);
-
-} else if (/^[é★@]/.test(trimmed)) {
-  // tier 2: é, ★, @
-  currentTier = "t2";
-  buffers.t2.push(trimmed);
-
-} else if (/^[í✸#]/.test(trimmed)) {
-  // tier 3: í, ✸, #
-  currentTier = "t3";
-  buffers.t3.push(trimmed);
-
-} else if (/^(?:≤|<=|<)\s*11\b/.test(trimmed)) {
-  // tier 1: numeric power-roll threshold, e.g. "≤11 8 damage; M<1 prone"
-  currentTier = "t1";
-  buffers.t1.push(trimmed);
-
-} else if (/^12\s*[–-]\s*16\b/.test(trimmed)) {
-  // tier 2: numeric power-roll threshold, e.g. "12–16 12 damage; M<2 prone"
-  currentTier = "t2";
-  buffers.t2.push(trimmed);
-
-} else if (/^17\+/.test(trimmed)) {
-  // tier 3: numeric power-roll threshold, e.g. "17+ 15 damage; M<3 prone"
-  currentTier = "t3";
-  buffers.t3.push(trimmed);
-
-} else {
-  // continuation lines
-  if (currentTier) {
-    buffers[currentTier].push(trimmed);
-  }
-}
-
+    if (/^[✦!]/.test(trimmed)) {
+      currentTier = "t1";
+      buffers.t1.push(trimmed);
+    } else if (/^[★@]/.test(trimmed)) {
+      currentTier = "t2";
+      buffers.t2.push(trimmed);
+    } else if (/^[✸#]/.test(trimmed)) {
+      currentTier = "t3";
+      buffers.t3.push(trimmed);
+    } else {
+      if (currentTier) {
+        buffers[currentTier].push(trimmed);
+      }
+    }
   }
 
   return {
