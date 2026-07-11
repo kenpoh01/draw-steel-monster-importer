@@ -77,7 +77,7 @@ export function buildEffectGroups(tieredDamage, potencyMap, highestCharacteristi
       );
 
       let display = rawClause || `{{potency}} ${condName}`;
-      display = display.replace(/([marip])<\d+\]/gi, "{{potency}}");
+      display = display.replace(/([marip])<\s*\d+\]/gi, "{{potency}}");
 
  group.applied[tier] = {
   display,
@@ -136,11 +136,16 @@ export function buildEffectGroups(tieredDamage, potencyMap, highestCharacteristi
   }
 
   // -------------------------
-  // OTHER GROUP (pure narrative)
+  // OTHER GROUP (narrative)
   // -------------------------
-  const hasPureNarrative = tiers.some(t => t && t.narrative && !t.conditions.length);
+  // NOTE: narrative can coexist with conditions on the same tier (e.g. a
+  // clause like "the target's player must introduce themself at the start
+  // of the target's turns (save ends)" gets picked up as a condition, but
+  // any remaining narrative text on that tier is still meaningful and must
+  // not be discarded just because the tier also has a condition).
+  const hasNarrative = tiers.some(t => t && t.narrative);
 
-  if (hasPureNarrative) {
+  if (hasNarrative) {
     const id = foundry.utils.randomID();
     const group = {
       _id: id,
@@ -155,7 +160,6 @@ export function buildEffectGroups(tieredDamage, potencyMap, highestCharacteristi
 
     tiers.forEach((parsed, i) => {
       if (!parsed || !parsed.narrative) return;
-      if (parsed.conditions.length) return;
 
       const tier = `tier${i + 1}`;
       group.other[tier] = {

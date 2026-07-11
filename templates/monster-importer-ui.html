@@ -3,15 +3,6 @@
     <h2>Import Draw Steel Monster</h2>
     <p><p>Paste the raw monster text below. Optionally include malice abilities.</p></p>
 
-    <!-- Source type toggle -->
-    <div class="form-group">
-      <label for="text-type">Text Source</label>
-      <select id="text-type" name="text-type">
-        <option value="official">Official PDF</option>
-        <option value="pre">Pre-release PDF</option>       
-	  </select>
-    </div>
-
     <!-- Folder -->
     <div class="form-group">
       <label for="monster-folder">Folder Name</label>
@@ -21,7 +12,7 @@
     <!-- Raw text input -->
     <div class="form-group" id="text-block">
       <label for="monster-text">Raw Text</label>
-      <textarea id="monster-text" rows="12" placeholder="Paste monster block here...Use * on its own line to separate the Monster Header (after the M, A, ...line) and EACH feature and ability. "></textarea>
+      <textarea id="monster-text" rows="12" placeholder="Paste monster block here, copied directly from the PDF. Works with official or pre-release stat block layouts — no special separators needed."></textarea>
     </div>
 
 <!-- Optional Malice Block -->
