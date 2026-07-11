@@ -10,7 +10,7 @@ TO INSTALL:
 
 Use the following manifest url to manually install from the modules tab within foundryvtt's setup screen.
 
-https://raw.githubusercontent.com/kenpoh01/draw-steel-monster-importer/refs/heads/main/module.json
+"https://raw.githubusercontent.com/kenpoh01/draw-steel-monster-importer/refs/heads/main/module.json"
 
 Or you can download the files from the repo and put them into a draw-steel-monster-importer folder into your modules folder before launching FoundryVTT. 
 
