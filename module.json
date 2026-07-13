@@ -4,7 +4,7 @@
   "description": "UI-based importer for Draw Steel monster stat blocks from pre-release and official PDF text.",
   "version": "1.0.0",
   "authors": [
-  {"name":"Kenpoh & Copilot"
+  {"name":"Kenpoh, Copilot, ChatGPT, Claude"
   }
   ],
   "compatibility": {
