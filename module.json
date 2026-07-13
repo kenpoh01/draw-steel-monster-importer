@@ -1,7 +1,7 @@
 {
   "id": "draw-steel-monster-importer",
   "title": "Draw Steel Monster Importer",
-  "description": "UI-based importer for Draw Steel monster stat blocks from pre-release and official PDF text, or JSON files.",
+  "description": "UI-based importer for Draw Steel monster stat blocks from pre-release and official PDF text.",
   "version": "1.0.0",
   "authors": [
   {"name":"Kenpoh & Copilot"
