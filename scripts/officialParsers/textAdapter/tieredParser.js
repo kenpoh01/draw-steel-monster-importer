@@ -20,16 +20,46 @@ function extractAbilityName(header) {
 }
 
 /**
- * Extract category (main, triggered, villain, maneuver, signature)
+ * Extract the action-economy type. Matches the game system's actual
+ * dropdown enum exactly: main, maneuver, freeManeuver, triggered,
+ * freeTriggered, move, none, villain — confirmed directly against the
+ * system's own system.type <select> markup, so this isn't a guess.
+ *
+ * "move action" -> "move" specifically checks for the two-word phrase,
+ * not a bare "move" search — "move" alone is an extremely common word
+ * in ordinary ability narrative ("the target can move up to its
+ * speed"), so a bare substring match would misfire constantly.
+ */
+function extractActionType(lines) {
+  const joined = lines.join(" ").toLowerCase();
+
+  if (joined.includes("free maneuver")) return "freeManeuver";
+  if (joined.includes("free triggered action")) return "freeTriggered";
+  if (joined.includes("triggered action")) return "triggered";
+  if (joined.includes("main action")) return "main";
+  if (joined.includes("move action")) return "move";
+  if (joined.includes("maneuver")) return "maneuver";
+  if (joined.includes("villain action")) return "villain";
+  if (joined.includes("no action")) return "none";
+
+  return "main";
+}
+
+/**
+ * Extract the ability's category/tier (signature, heroic, villain,
+ * main). This is a DIFFERENT field from the action-economy type above —
+ * an ability can be a "Signature Ability" that uses a "Main action" at
+ * the same time, so these must be detected independently rather than
+ * sharing one result (a signature ability was previously never actually
+ * tagged "signature", since the "main action" check ran first and
+ * matched instead).
  */
 function extractAbilityCategory(lines) {
   const joined = lines.join(" ").toLowerCase();
 
-  if (joined.includes("main action")) return "main";
-  if (joined.includes("triggered action")) return "triggered";
-  if (joined.includes("villain action")) return "villain";
-  if (joined.includes("maneuver")) return "maneuver";
   if (joined.includes("signature ability")) return "signature";
+  if (joined.includes("villain action")) return "villain";
+  if (joined.includes("heroic")) return "heroic";
 
   return "main";
 }
@@ -73,9 +103,10 @@ if (maliceMatch) {
   console.log("🔥 Malice cost detected:", maliceCost);
 }
 
-  // Extract category
+  // Extract action-economy type and ability category independently —
+  // they're different fields (see extractActionType/extractAbilityCategory).
+  const actionType = extractActionType(lines);
   const category = extractAbilityCategory(lines);
-  console.log("🏷 Category:", category);
 
   // Extract keywords
   const keywords = lines.length > 1 ? extractKeywords(lines[1]) : [];
@@ -231,7 +262,7 @@ if (maliceMatch) {
     img: "icons/skills/melee/strike-polearm-glowing-white.webp",
 
     system: {
-      type: category,
+      type: actionType,
       category,
       keywords,
       distance,

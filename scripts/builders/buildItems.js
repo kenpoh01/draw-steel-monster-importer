@@ -13,9 +13,13 @@ function getAbilityIcon(a) {
     case "main":
       return "icons/skills/melee/strike-polearm-glowing-white.webp";
     case "maneuver":
+    case "freemaneuver":
       return "icons/magic/air/air-pressure-shield-blue.webp";
     case "triggered":
+    case "freetriggered":
       return "icons/magic/air/air-wave-gust-blue.webp";
+    case "move":
+      return "icons/skills/movement/arrow-upward-yellow.webp";
     case "villain":
       return "icons/magic/death/skull-horned-worn-fire-blue.webp";
     default:

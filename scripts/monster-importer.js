@@ -1,6 +1,6 @@
 // scripts/monster-importer.js
 
-import { parseMonster } from "./monsterParser.js";
+import { parseMonsters } from "./monsterParser.js";
 import { buildItems } from "./builders/buildItems.js";
 import { parseMaliceText } from "./officialMaliceParsers/maliceParser.js";
 
@@ -38,33 +38,15 @@ class MonsterImportUI extends Application {
         return;
       }
 
-      // Parse the monster (header, features, abilities, actorData)
-      const { actorData, features, abilities } = await parseMonster(rawText);
+      // Parse every monster stat block found in the pasted text (a
+      // single monster still comes back as a one-element array).
+      const monsters = await parseMonsters(rawText);
 
-      // Parse malice abilities ONLY if the malice block is not empty
+      // Parse malice abilities ONCE — shared across every monster below.
       let maliceAbilities = [];
       if (maliceText.trim().length > 0) {
         const parsed = parseMaliceText(maliceText);
         maliceAbilities = parsed.items ?? [];
-      }
-
-      // Build Foundry items from parsed data
-      const highestCharacteristic = (() => {
-        const chars = actorData.system?.characteristics || {};
-        const entries = Object.entries(chars);
-        if (!entries.length) return "none";
-        entries.sort((a, b) => b[1] - a[1]);
-        return entries[0][0];
-      })();
-
-      const items = buildItems(features, abilities, {
-        ...actorData.system,
-        highestCharacteristic
-      });
-
-      // Append malice abilities (if any)
-      if (maliceAbilities.length > 0) {
-        items.push(...maliceAbilities);
       }
 
       // Create folder if needed
@@ -81,14 +63,44 @@ class MonsterImportUI extends Application {
         folderId = folder.id;
       }
 
-      // Create the actor
-      const actor = await Actor.create({
-        ...actorData,
-        items,
-        folder: folderId
-      });
+      const createdNames = [];
 
-      ui.notifications.info(`Imported: ${actor.name}`);
+      for (const { actorData, features, abilities } of monsters) {
+        const highestCharacteristic = (() => {
+          const chars = actorData.system?.characteristics || {};
+          const entries = Object.entries(chars);
+          if (!entries.length) return "none";
+          entries.sort((a, b) => b[1] - a[1]);
+          return entries[0][0];
+        })();
+
+        const items = buildItems(features, abilities, {
+          ...actorData.system,
+          highestCharacteristic
+        });
+
+        // Each actor gets its own deep-cloned copy of the shared malice
+        // items — reusing the same object reference across multiple
+        // Actor.create() calls would let Foundry's ID assignment for one
+        // actor bleed into the next.
+        if (maliceAbilities.length > 0) {
+          items.push(...foundry.utils.deepClone(maliceAbilities));
+        }
+
+        const actor = await Actor.create({
+          ...actorData,
+          items,
+          folder: folderId
+        });
+
+        createdNames.push(actor.name);
+      }
+
+      ui.notifications.info(
+        createdNames.length === 1
+          ? `Imported: ${createdNames[0]}`
+          : `Imported ${createdNames.length} monsters: ${createdNames.join(", ")}`
+      );
       this.close();
 
     } catch (err) {

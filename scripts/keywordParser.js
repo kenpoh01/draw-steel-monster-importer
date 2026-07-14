@@ -129,11 +129,17 @@ export function parseKeywordLine(line) {
   for (const token of tokens) {
     const lowered = token.toLowerCase();
 
-    if (lowered.includes("main action")) type = "main";
+    // "Free maneuver"/"free triggered action" must be checked BEFORE the
+    // plain "maneuver"/"triggered" checks below — those match as
+    // substrings of the free variants too, so checking them first would
+    // make the free branches unreachable.
+    if (lowered.includes("free maneuver")) type = "freeManeuver";
+    else if (lowered.includes("free triggered action") || lowered.includes("free triggered")) type = "freeTriggered";
+    else if (lowered.includes("main action")) type = "main";
+    else if (lowered.includes("move action")) type = "move";
     else if (lowered.includes("maneuver")) type = "maneuver";
     else if (lowered.includes("reaction")) type = "reaction";
     else if (lowered.includes("triggered action") || lowered.includes("triggered")) type = "triggered";
-    else if (lowered.includes("free maneuver")) type = "maneuver";
     else keywords.push(token);
   }
 
