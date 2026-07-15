@@ -36,7 +36,7 @@ export const validAncestryKeywords = [
 // When the system supports them, switch parser logic to use `allAncestries`.
 
 export const customAncestryRegistry = new Set([
-  "ooze" // first custom ancestry, future‑proofed
+  "ooze", "angulotl", "arixx", "basilisk", "bredbeddle", "bugbear", "chimera", "demon", "devil", "draconian", "dwarf", "elfHigh", "elfShadow", "elfWode", "giantFire", "giantFrost", "giantHill", "giantStone", "gnoll", "goblin", "griffon", "hag", "hobgoblin", "human", "worm", "kobold", "lightbender", "lizardfolk", "manticore", "medusa", "minotaur", "ogre", "olothec", "orc", "radenwight", "rival", "shamblingMound", "timeRaider", "troll", "mummy", "vampire", "multivok", "servok", "valok", "voicelessTalker", "warDog", "werebeast", "wyvern", "eyestalk", "overmind" // first custom ancestry, futureproofed
 ]);
 
 // ✅ Unified ancestry set (official + custom)
