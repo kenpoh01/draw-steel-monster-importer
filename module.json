@@ -2,14 +2,14 @@
   "id": "draw-steel-monster-importer",
   "title": "Draw Steel Monster Importer",
   "description": "UI-based importer for Draw Steel monster stat blocks from pre-release and official PDF text.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "authors": [
   {"name":"Kenpoh, Copilot, ChatGPT, Claude"
   }
   ],
   "compatibility": {
     "minimum": "13",
-    "verified": "13"
+    "verified": "14"
   },
   "esmodules": [
     "scripts/monster-importer.js"
@@ -28,5 +28,5 @@
  
   "url": "https://github.com/kenpoh01/draw-steel-monster-importer",
   "manifest": "https://raw.githubusercontent.com/kenpoh01/draw-steel-monster-importer/refs/heads/main/module.json",
-  "download": "https://github.com/kenpoh01/draw-steel-monster-importer/releases/download/v.0.0.7/module.zip"
+  "download": "https://github.com/kenpoh01/draw-steel-monster-importer/releases/download/v1.0.1/module.zip"
 }
