@@ -73,7 +73,8 @@ export const supportedConditions = new Set([
 // ✅ Custom effects not listed in Heroes book p.77
 export const customEffectRegistry = new Set([
   "warped", "dragonsealed", "entangled", "phased", "corrupted",
-  "marked", "unstable", "banished", "fractured", "blood soaked", "immolated"
+  "marked", "unstable", "banished", "fractured", "blood soaked", "immolated",
+  "transfixed"
 ]);
 
 
