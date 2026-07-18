@@ -28,7 +28,7 @@ const ACTION_TYPE_TAIL =
  */
 export function stripLeadingMarker(line) {
   return line
-    .replace(/^[▶🟆📏🞋¢]\s*/u, "")
+    .replace(/^[▶🟆📏🞋¢¡]\s*/u, "")
     .replace(/^\*\s+/, "")
     .replace(/^[motglfbecdr)]\s+/, "");
 }
@@ -67,7 +67,7 @@ function isSentenceContinuation(line) {
 // the ordinary short-title shape check.
 function hasKnownLeadingMarker(line) {
   return (
-    /^[▶🟆📏🞋¢]/u.test(line) ||
+    /^[▶🟆📏🞋¢¡]/u.test(line) ||
     /^\*\s+[A-Z]/.test(line) ||
     /^[motglfbecdr)]\s+[A-Z]/.test(line)
   );
