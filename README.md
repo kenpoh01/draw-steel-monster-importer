@@ -11,6 +11,8 @@ TO INSTALL: Use this manifest: https://raw.githubusercontent.com/kenpoh01/draw-s
 When you go to the "Create Actor" tab, there should be an "Import Monster" button at the bottom of the panel. Click it and follow the instructions. Copy and paste the associate blocks from the Heroes pdf.  NOTE: I use foxit reader for my pdf work.  You may have to select multiple text blocks in the pdf as it doesn't seem like you can select the whole thing.
 ALSO NOTE: you have to put an * between the header and each ability to help the parser separate things properly.  This has to be done with the Malice parser too.  For the malice parser, only copy and paste the actual abilities, not the blurb at the top.
 
+If this has been useful, please consider buying me a kofi: https://ko-fi.com/kenpoh
+
 https://github.com/user-attachments/assets/1bb7c8e9-ca6c-4f8c-b250-64b63fa5545e
 
 https://github.com/user-attachments/assets/7880fea8-20a1-4e86-af96-7d5d93cfbe43
